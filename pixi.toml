@@ -1,5 +1,5 @@
 [workspace]
-authors = ["Cristóbal José Gallego Castillo <83344529+cristobal-GC@users.noreply.github.com>"]
+authors = ["Cristobal Gallego-Castillo"]
 channels = ["conda-forge", "bioconda"]
 name = "ISA-NUTS_potentials"
 platforms = ["linux-64"]
@@ -9,8 +9,6 @@ version = "0.1.0"
 
 [dependencies]
 python = ">=3.10"
+snakemake = ">=9.7.1"
 pandas = "*"
-snakemake-minimal = ">=9.7.1"
-matplotlib = "*"
-graphviz = "*"
 atlite = ">=0.4.1,<0.5"
