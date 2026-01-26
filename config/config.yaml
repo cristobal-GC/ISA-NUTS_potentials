@@ -1,0 +1,10 @@
+
+
+region:
+- ES11
+- ES12
+
+message:
+  a: 'eoo'
+  b: 'edddd'
+  c: 'efff'
