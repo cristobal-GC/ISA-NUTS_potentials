@@ -11,7 +11,7 @@
 .pixi
 .pixi/*
 !.pixi/config.toml
-
+pixi.lock
 
 
 # Visual Studio Code
