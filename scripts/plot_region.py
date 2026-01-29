@@ -2,10 +2,14 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 
+
+
 ########## Unwrap relevant variables
 gdf_file    = snakemake.input["gdf"]
 map_file    = snakemake.output["map"]
 region      = snakemake.wildcards["region"]
+
+
 
 ########## Operations
 

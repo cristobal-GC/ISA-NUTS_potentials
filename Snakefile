@@ -23,6 +23,28 @@ REGION = config["region"]
 
 
 
+##### Define function to get the NUTS level from the region (useful to point at the correct NUTS file)
+
+def nuts_from_region(region):
+
+    levels = {
+        #0: 'NUTS0',
+        2: 'NUTS2',
+        3: 'NUTS3',
+    }
+
+    n_digits = sum(c.isdigit() for c in region)
+
+    try:
+        return levels[n_digits]
+    except KeyError:
+        raise ValueError(f"NUTS level not supported for region: {region}")
+
+
+
+
+
+
 rule all:
     input:
         expand("results/figs/{region}.pdf", region=REGION)
@@ -36,7 +58,7 @@ rule all:
 #     input:
 #         label_input=file_input
 #     output:
-#         label_ourput=file_output
+#         label_output=file_output
 #     script:
 #         "path_to_script.py"
 
@@ -46,8 +68,8 @@ rule all:
 #
 #   snakemake.wildcards["sample"]  <  where {sample} is the wildcard
 #   snakemake.params["label"]
-#   snakemake.input["label"]
-#   snakemake.output["label"]
+#   snakemake.input["label_input"]
+#   snakemake.output["label_output"]
 #   snakemake.config  <  not recommended, better to use params, except for global params
 #   snakemake.log
 
