@@ -12,7 +12,8 @@ if Path("config/config.yaml").exists():
 
 ##### Include rules
 include:
-   "rules/plotting.smk",
+#   "rules/plotting.smk",
+   "rules/getting.smk",
 
 
 

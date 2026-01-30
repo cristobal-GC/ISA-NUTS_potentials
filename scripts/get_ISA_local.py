@@ -11,8 +11,13 @@ from rasterio.mask import mask
 
 
 ############################## Unwrap relevant variables
-ISA_file        = snakemake.input["ISA_file"]
-ISA_local_file  = snakemake.output["ISA_local_file"]
+
+##### input
+file_NUTS       = snakemake.input["file_NUTS"]
+file_ISA        = snakemake.input["file_ISA"]
+##### output
+file_ISA_local  = snakemake.output["file_ISA_local"]
+##### wildcards
 region          = snakemake.wildcards["region"]
 resource        = snakemake.wildcards["resource"]
 
@@ -21,11 +26,14 @@ resource        = snakemake.wildcards["resource"]
 ############################## Operations
 
 ##### Load gdf with nuts
+gdf_NUTS = (gpd.read_file(file_NUTS)
+               .set_index("id")
+               .loc[[region]]
+)
 
-file_gdf_nuts = '../data/nuts/NUTS_RG_01M_2021_4326_LEVL_2.geojson'
 
-gdf = gpd.read_file(file_gdf_nuts)
-
+input(f'gdf_NUTS is {gdf_NUTS}')
 
 
 ############################## Create outputs
+file_ISA_local.touch()
