@@ -1,8 +1,22 @@
 
+#################### Auxiliary functions
+
+RESOURCE_RASTERS = {
+    "onwind": "data/ISA/Clas_ISA_eol_pb.tiff",
+    "solar": "data/ISA/Clas_ISA_ftv_pb.tiff",
+}
+
+def get_file_ISA(wc):
+    try:
+        return RESOURCE_RASTERS[wc.resource]
+    except KeyError:
+        raise ValueError(f"Invalid resource: {wc.resource}")
+
+
 
 #################### get_ISA_local
 #
-# This rule is to generate a ISA raster for a specific region
+# This rule is to generate an ISA raster for a specific region
 #
 # Wildcards:
 #   - region    [ES11, ... ]
@@ -10,16 +24,10 @@
 
 rule get_ISA_local:
     input:
-        file_NUTS = lambda wc: f"data/NUTS/{nuts_from_region(wc['region'])}_ES.geojson",
-
-
-        file_ISA = lambda wc: (
-                                "data/ISA/Clas_ISA_eol_pb.tiff" 
-                                if wc['resource']=='onwind'
-                                else 
-                                "data/ISA/Clas_ISA_ftv_pb.tiff"
-                               )
+        gdf_NUTS ="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
+        raster_ISA=get_file_ISA
     output:
-        file_ISA_local="results/ISA/ISA_local_{resource}_{region}.tiff"
+        raster_ISA_local="results/rasters/ISA/ISA_local_{resource}_{region}.tiff"
     script:
         "../scripts/get_ISA_local.py"
+

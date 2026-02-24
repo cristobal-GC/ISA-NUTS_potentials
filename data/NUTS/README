@@ -1,0 +1,14 @@
+
+##### NUTS_RG_01M_2021_4326_ES.geojson
+
+Columns:
+
+    'NUTS_ID'
+    'LEVL_CODE'
+    'CNTR_CODE'
+    'NAME_LATN'
+    'NUTS_NAME'
+    'MOUNT_TYPE'
+    'URBN_TYPE'
+    'COAST_TYPE'
+    'geometry'

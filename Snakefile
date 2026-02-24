@@ -11,25 +11,27 @@ if Path("config/config.yaml").exists():
 
 
 ##### Include rules
-include:
-#   "rules/plotting.smk",
-   "rules/getting.smk",
+include: "rules/plotting.smk"
+include: "rules/getting.smk",
 
 
 
 ##### Retrieve relevant information from config file
 
-REGION = config["region"]
+REGIONS = config["regions"]
+RESOURCES = config["resources"]
+FORMATS = config["formats"]
+RESOLUTIONS = config["resolutions"]
 
 
 
-
-##### Define function to get the NUTS level from the region (useful to point at the correct NUTS file)
+##### Define function to get the NUTS level (e.g. "NUTS2") from the region code (e.g. "ES11")
+# Is that useful? current NUTS file ships all the levels
 
 def nuts_from_region(region):
 
     levels = {
-        #0: 'NUTS0',
+        0: 'NUTS0',
         2: 'NUTS2',
         3: 'NUTS3',
     }
@@ -48,7 +50,10 @@ def nuts_from_region(region):
 
 rule all:
     input:
-        expand("results/figs/{region}.pdf", region=REGION)
+#        expand("results/rasters/ISA/ISA_local_{resource}_{region}.tiff", resource=RESOURCES, region=REGIONS),
+        expand("results/maps/ISA/{resolution}/{format}/ISA_local_{resource}_{region}_{resolution}.{format}", resource=RESOURCES, region=REGIONS, resolution=RESOLUTIONS, format=FORMATS)
+
+
 
 
 # rule pattern

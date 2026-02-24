@@ -1,10 +1,30 @@
 
-
-region:
+########## WILDCARDS
+regions:
 - ES11
-- ES12
+- ES111
 
-message:
-  a: 'eoo'
-  b: 'edddd'
-  c: 'efff'
+resources:
+- onwind
+- solar
+
+
+formats:
+- pdf
+- png
+
+resolutions:
+- HR
+- LR
+
+
+########## PARAMETERS
+map_params:
+  LR:
+    size: 12
+    linewidth: 1.5
+    fontsize: 16
+  HR:
+    size: 36
+    linewidth: 4.5
+    fontsize: 48

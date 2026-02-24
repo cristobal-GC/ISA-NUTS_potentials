@@ -1,8 +1,12 @@
 
-rule plot_region:
+
+rule plot_ISA_local:
+    params:
+        map_params=config["map_params"]
     input:
-        gdf="data/NUTS/NUTS2_ES.geojson"
+        gdf_NUTS ="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
+        raster_ISA_local="results/rasters/ISA/ISA_local_{resource}_{region}.tiff"
     output:
-        map="results/figs/{region}.pdf"
+        map_ISA_local="results/maps/ISA/{resolution}/{format}/ISA_local_{resource}_{region}_{resolution}.{format}"
     script:
-        "../scripts/plot_region.py"
+        "../scripts/plot_ISA_local.py"
