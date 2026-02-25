@@ -14,11 +14,29 @@ formats:
 - png
 
 resolutions:
-- HR
+#- HR
 - LR
+
+cutouts:
+#- newa
+#- era5
+- ibera5
+
+years:
+#- 2013
+- 2023
+
 
 
 ########## PARAMETERS
+
+cutout_params:
+  era5_2023:
+    path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2023-sarah3-era5.nc"
+  ibera5_2023:
+    path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/iberia-2023-era5.nc"
+  
+
 map_params:
   LR:
     size: 12
@@ -28,3 +46,12 @@ map_params:
     size: 36
     linewidth: 4.5
     fontsize: 48
+  cutout:
+    onwind:
+      cmap: viridis
+      units: m/s
+    solar:
+      cmap: YlOrRd
+      units: W/m2
+
+

@@ -22,37 +22,17 @@ include: "rules/retrieving.smk"
 
 REGIONS = config["regions"]
 RESOURCES = config["resources"]
+CUTOUTS = config["cutouts"]
+YEARS = config["years"]
 FORMATS = config["formats"]
 RESOLUTIONS = config["resolutions"]
 
 
 
-##### Define function to get the NUTS level (e.g. "NUTS2") from the region code (e.g. "ES11")
-# # Is that useful? current NUTS file ships all the levels
-#
-# def nuts_from_region(region):
-#
-#     levels = {
-#         0: 'NUTS0',
-#         2: 'NUTS2',
-#         3: 'NUTS3',
-#     }
-#
-#     n_digits = sum(c.isdigit() for c in region)
-#
-#     try:
-#         return levels[n_digits]
-#     except KeyError:
-#         raise ValueError(f"NUTS level not supported for region: {region}")
-#
-
-
-
-
 rule all:
     input:
-        expand("results/maps/ISA/{resolution}/{format}/ISA_local_{resource}_{region}_{resolution}.{format}", resource=RESOURCES, region=REGIONS, resolution=RESOLUTIONS, format=FORMATS)
-
+        expand("results/maps/ISA/{resolution}/{format}/ISA_local_{resource}_{region}_{resolution}.{format}", resource=RESOURCES, region=REGIONS, resolution=RESOLUTIONS, format=FORMATS),
+        expand("results/maps/cutout/{cutout}/{format}/cutout_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS) 
 
 
 

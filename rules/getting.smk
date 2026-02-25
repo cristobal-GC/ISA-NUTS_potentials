@@ -14,7 +14,7 @@ def get_file_ISA(wc):
 
 
 
-#################### get_ISA_local
+#################### get_raster_ISA_local
 #
 # This rule is to generate an ISA raster for a specific region from the Spanis ISA raster
 #
@@ -22,14 +22,33 @@ def get_file_ISA(wc):
 #   - region    [ES11, ... ]
 #   - resource  [onwind, solar]
 
-rule get_ISA_local:
+rule get_raster_ISA_local:
     message:
-        "... Getting ISA_local raster for resource {wildcards.resource} and region {wildcards.region}."
+        "... Getting raster_ISA_local for resource {wildcards.resource} and region {wildcards.region}."
     input:
         gdf_NUTS ="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
         raster_ISA=get_file_ISA
     output:
-        raster_ISA_local="results/rasters/ISA/ISA_local_{resource}_{region}.tiff"
+        raster_ISA_local="results/rasters/ISA/raster_ISA_local_{resource}_{region}.tiff"
     script:
-        "../scripts/get_ISA_local.py"
+        "../scripts/get_raster_ISA_local.py"
 
+
+
+#################### get_df_ISA_local
+#
+# This rule is to generate a df with the info about surface percentages for ISA classes from raster_ISA_local
+#
+# Wildcards:
+#   - region    [ES11, ... ]
+#   - resource  [onwind, solar]
+
+rule get_df_ISA_local:
+    message:
+        "... Getting df_ISA_local for resource {wildcards.resource} and region {wildcards.region}."
+    input:        
+        raster_ISA_local="results/rasters/ISA/raster_ISA_local_{resource}_{region}.tiff"
+    output:
+        df_ISA_local="results/dfs/ISA/df_ISA_local_{resource}_{region}.csv"
+    script:
+        "../scripts/get_df_ISA_local.py"
