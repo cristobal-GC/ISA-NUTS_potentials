@@ -16,13 +16,15 @@ def get_file_ISA(wc):
 
 #################### get_ISA_local
 #
-# This rule is to generate an ISA raster for a specific region
+# This rule is to generate an ISA raster for a specific region from the Spanis ISA raster
 #
 # Wildcards:
 #   - region    [ES11, ... ]
 #   - resource  [onwind, solar]
 
 rule get_ISA_local:
+    message:
+        "... Getting ISA_local raster for resource {wildcards.resource} and region {wildcards.region}."
     input:
         gdf_NUTS ="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
         raster_ISA=get_file_ISA

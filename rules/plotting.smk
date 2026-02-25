@@ -1,6 +1,8 @@
 
 
 rule plot_ISA_local:
+    message:
+        "... Plotting ISA map for resource {wildcards.resource}, region {wildcards.region}, resolution {wildcards.resolution} and format {wildcards.format}."
     params:
         map_params=config["map_params"]
     input:
