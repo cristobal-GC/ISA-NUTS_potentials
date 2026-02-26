@@ -1,10 +1,7 @@
+import xarray as xr
+import matplotlib.pyplot as plt
 import geopandas as gpd
 import cartopy.crs as ccrs
-import atlite
-
-import matplotlib
-matplotlib.use('Agg')  # This enables backend without GUI (there seems to be problems with projection, PlateCarree)
-import matplotlib.pyplot as plt
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -18,8 +15,9 @@ cutout_params = snakemake.params["cutout_params"]
 map_params = snakemake.params["map_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
+file_nc_CF = snakemake.input["nc_CF"]
 ##### output
-file_map_cutout = snakemake.output["map_cutout"]
+file_map_CF = snakemake.output["map_CF"]
 ##### wildcards
 cutout = snakemake.wildcards["cutout"]
 year =snakemake.wildcards["year"]
@@ -27,48 +25,20 @@ region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
 
 
-
 ############################## Operations
 
-##### Load cutout 
-file_cutout = cutout_params[f"{cutout}_{year}"]["path"]
-c = atlite.Cutout(file_cutout)
+##### Load CF
+CF = xr.open_dataarray(file_nc_CF)
 
 ##### Load gdf_NUTS and apply operations
 gdf_NUTS = (
     gpd.read_file(file_gdf_NUTS)
     .set_index("NUTS_ID")            # set index 
-    .to_crs(c.crs)                   # change crs to that of the cutout
+    .to_crs(4326)                    # set 4326
 )
 
 ##### Filter gdf with only one nuts region    
 gdf_NUTS_local = gdf_NUTS.loc[[region]]
-
-
-##### limit cutout
-# Get region bounding box
-xmin, ymin, xmax, ymax = gdf_NUTS_local.total_bounds
-
-# Add margin of one cell
-margin_x = c.dx
-margin_y = c.dy
-
-xmin -= margin_x
-xmax += margin_x
-ymin -= margin_y
-ymax += margin_y
-
-# Limit cutout
-c = c.sel(bounds=(xmin, ymin, xmax, ymax))
-
-
-##### Compute fields
-if resource == 'onwind':
-    field = c.data.wnd100m.mean(dim="time")
-elif resource == 'solar':
-    field = c.data.influx_direct.mean(dim='time') + c.data.influx_diffuse.mean(dim='time')
-else: 
-    raise ValueError(f"resource must be 'onwind' or 'solar', but received: {resource}")
 
 
 
@@ -79,21 +49,20 @@ size = map_params[resolution]["size"]
 linewidth = map_params[resolution]["linewidth"]
 fontsize = map_params[resolution]["fontsize"]
 
-cmap = map_params['cutout'][resource]['cmap']
-units = map_params['cutout'][resource]['units']
+cmap = map_params['CF'][resource]['cmap']
 
 
 ##### Make plot
 fig, ax = plt.subplots(figsize=(size, size))
 
 # Plot field without automatic cbar
-mappable = field.plot(
+mappable = CF.plot(
     ax=ax,
     x="lon",
     y="lat",
     cmap=cmap,
-    vmin=field.min().values.item(),
-    vmax=field.max().values.item(),
+    vmin=0,
+    vmax=1,
     add_colorbar=False
 )
 
@@ -110,7 +79,7 @@ cbar = fig.colorbar(
     pad=0.04   # control size and gap
 )
 
-cbar.set_label(units, fontsize=fontsize)
+cbar.set_label("Capacity Factor", fontsize=fontsize)
 cbar.ax.tick_params(labelsize=fontsize)
 
 
@@ -135,11 +104,9 @@ ax.set_ylim(center_y-0.5*delta_km/km_per_lat, center_y+0.5*delta_km/km_per_lat)
 
 ##### Save figure
 fig.savefig(
-    file_map_cutout,
+    file_map_CF,
     bbox_inches="tight",
     pad_inches=0.2
 )  
 
 plt.close(fig)
-
-

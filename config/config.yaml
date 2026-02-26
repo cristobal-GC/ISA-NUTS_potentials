@@ -6,7 +6,7 @@ regions:
 
 resources:
 - onwind
-- solar
+#- solar
 
 
 formats:
@@ -19,8 +19,8 @@ resolutions:
 
 cutouts:
 #- newa
-#- era5
-- ibera5
+- era5
+#- ibera5
 
 years:
 #- 2013
@@ -35,7 +35,18 @@ cutout_params:
     path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2023-sarah3-era5.nc"
   ibera5_2023:
     path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/iberia-2023-era5.nc"
-  
+
+CF_params:
+  onwind:
+    turbine: Vestas_V112_3MW_h100
+    correction_factor:  0.93
+  solar:
+    panel: CSi
+    orientation:
+      slope: 35
+      azimuth: 180.0
+    correction_factor: 0.85
+
 
 map_params:
   LR:
@@ -53,5 +64,9 @@ map_params:
     solar:
       cmap: YlOrRd
       units: W/m2
+  CF:
+    onwind:
+      cmap: 'BuPu'
+
 
 

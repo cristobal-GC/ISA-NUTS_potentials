@@ -31,10 +31,64 @@ RESOLUTIONS = config["resolutions"]
 
 rule all:
     input:
-        expand("results/maps/ISA/{resolution}/{format}/ISA_local_{resource}_{region}_{resolution}.{format}", resource=RESOURCES, region=REGIONS, resolution=RESOLUTIONS, format=FORMATS),
-        expand("results/maps/cutout/{cutout}/{format}/cutout_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS) 
+        "DAG/dag.pdf",
+        expand("results/maps/ISA/{resolution}/{format}/ISA_{resource}_{region}_{resolution}.{format}", resource=RESOURCES, region=REGIONS, resolution=RESOLUTIONS, format=FORMATS),
+        expand("results/maps/cutout/{cutout}/{format}/cutout_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS),
+        expand("results/maps/CF/{cutout}/{format}/CF_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS) 
 
 
+
+
+
+rule dag:
+    message:
+        "... Generating workflow DAG (PNG, PDF, SVG)"
+    output:
+        "DAG/dag.png",
+        "DAG/dag.pdf",
+        "DAG/dag.svg"
+    shell:
+        (
+            "mkdir -p DAG && "
+            "snakemake --dag --nolock | dot -Tpng -o {output[0]} && "
+            "snakemake --dag --nolock | dot -Tpdf -o {output[1]} && "
+            "snakemake --dag --nolock | dot -Tsvg -o {output[2]}"
+        )
+
+
+rule rulegraph:
+    message:
+        "... Generating workflow rule graph (PNG, PDF, SVG)"
+    output:
+        "DAG/rulegraph.png",
+        "DAG/rulegraph.pdf",
+        "DAG/rulegraph.svg"
+    shell:
+        (
+            "mkdir -p DAG && "
+            "snakemake --rulegraph --nolock | dot -Tpng -o {output[0]} && "
+            "snakemake --rulegraph --nolock | dot -Tpdf -o {output[1]} && "
+            "snakemake --rulegraph --nolock | dot -Tsvg -o {output[2]}"
+        )
+
+
+rule filegraph:
+    message:
+        "... Generating workflow rule graph (PNG, PDF, SVG)"
+    output:
+        "DAG/filegraph.png",
+        "DAG/filegraph.pdf",
+        "DAG/filegraph.svg"
+    shell:
+        (
+            "mkdir -p DAG && "
+            "snakemake --filegraph --nolock | dot -Tpng -o {output[0]} && "
+            "snakemake --filegraph --nolock | dot -Tpdf -o {output[1]} && "
+            "snakemake --filegraph --nolock | dot -Tsvg -o {output[2]}"
+        )
+
+
+        
 
 # rule pattern
 #     params:

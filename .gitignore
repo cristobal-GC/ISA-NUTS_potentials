@@ -3,6 +3,7 @@
 results/
 tests/
 data/ISA/
+DAG/
 
 .snakemake/
 

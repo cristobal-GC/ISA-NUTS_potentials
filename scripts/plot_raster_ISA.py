@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 
+from typing import Any
+snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
+
 
 
 ############################## Unwrap relevant variables
@@ -17,10 +20,10 @@ from matplotlib.patches import Patch
 map_params = snakemake.params["map_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
-file_raster_ISA_local = snakemake.input["raster_ISA_local"]
-file_df_ISA_local = snakemake.input["df_ISA_local"]
+file_raster_ISA = snakemake.input["raster_ISA"]
+file_df_ISA = snakemake.input["df_ISA"]
 ##### output
-file_map_ISA_local = snakemake.output["map_ISA_local"]
+file_map_ISA = snakemake.output["map_ISA"]
 ##### wildcards
 region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
@@ -31,24 +34,28 @@ format = snakemake.wildcards["format"]
 
 ############################## Operations
 
-##### Load raster_ISA_local
-raster_ISA_local = rasterio.open(file_raster_ISA_local)
+##### Load raster_ISA and read required attributes
+with rasterio.open(file_raster_ISA) as raster_ISA:
+    raster_crs = raster_ISA.crs
+    transform = raster_ISA.transform
+    band = raster_ISA.read(1)
+    nodata = raster_ISA.nodata if raster_ISA.nodata is not None else 65535
 
-##### Load df_ISA_local
-df = pd.read_csv(file_df_ISA_local, index_col="value")
+##### Load df_ISA
+df = pd.read_csv(file_df_ISA, index_col="value")
 
 ##### Load gdf_NUTS and apply operations
 gdf_NUTS = (gpd.read_file(file_gdf_NUTS)
            .set_index("NUTS_ID")            # set index 
-           .to_crs(raster_ISA_local.crs)    # change crs to that of the ISA raster
+           .to_crs(raster_crs)    # change crs to that of the ISA raster
 )
 
+# Prepare local gdf: filter gdf with only one nuts region    
+gdf_NUTS_local = gdf_NUTS.loc[[region]]
 
 
-##### Prepare raster
 
-# Get ISA band
-band = raster_ISA_local.read(1)
+##### Prepare for plotting
 
 # Define colors
 colors_contraste = [    
@@ -75,14 +82,10 @@ legend_elements = [
 ]
 
 
-# Mask nodata
-nodata = 65535
+# Mask nodata (use nodata read from raster if available)
 band_masked = np.ma.masked_equal(band, nodata)
 
 
-
-##### Prepare gdf: filter gdf with only one nuts region    
-gdf_NUTS_local = gdf_NUTS.loc[[region]]
 
 
 
@@ -97,11 +100,11 @@ fig, ax = plt.subplots(figsize=(size, size))
 
 # It seems that current version of the show function normalises the band values between 0 and 1? I need to set vmin=0 and vmax=1 to get proper colour assesment
 show(band_masked,
-     transform=raster_ISA_local.transform,
-     cmap=cmap,
-     vmin=0, 
-     vmax=1,
-     ax=ax
+    transform=transform,
+    cmap=cmap,
+    vmin=0,
+    vmax=1,
+    ax=ax
 )
 
 # Add gdf (only regions for the same NUTS level than local)
@@ -140,7 +143,7 @@ ax.set_yticks([])
 
 
 ##### Save figure
-fig.savefig(file_map_ISA_local,
+fig.savefig(file_map_ISA,
             bbox_inches="tight",
             pad_inches=0)  
 
