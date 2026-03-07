@@ -82,9 +82,9 @@ rule get_nc_CF:
 
 
 
-#################### get_nc_CAPACITYs
+#################### get_nc_CAPACITY_CF_ISA
 #
-# This rule is to get the different versions of the capacity matrix
+# This rule is to get the CAPACITY matrix with CF threshold and single ISA code
 #
 # Wildcards:
 #   - region    [ES11, ... ]
@@ -93,19 +93,18 @@ rule get_nc_CF:
 #   - year      [2013, ...]
 #   - isa       [0, 1, ...]
 
-rule get_nc_CAPACITYs:
+rule get_nc_CAPACITY_CF_ISA:
     message:
-        "... Getting nc_CAPACITY matrices for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region} and ISA:{wildcards.isa}."
+        "... Getting nc_CAPACITY matrix for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region} and ISA: {wildcards.isa}."
     params:
         cutout_params=config["cutout_params"],
-        CF_params=config["CF_params"],
+        cap_per_sqkm=lambda w: config["CF_params"][w.resource]["cap_per_sqkm"],
+        CF_threshold=lambda w: config["CF_params"][w.resource]["CF_threshold"],
     input:
         gdf_NUTS="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
         nc_CF="results/ncs/CF/CF_{resource}_{region}_{cutout}_{year}.nc",
         raster_ISA="results/rasters/ISA/raster_ISA_{resource}_{region}.tiff",
     output:
-        file_CAPACITY_ISA="results/ncs/CAPACITY/CAPACITY_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc",
-        file_CAPACITY_CF="results/ncs/CAPACITY/CAPACITY_CF_{resource}_{region}_{cutout}_{year}.nc",
-        file_CAPACITY_CF_ISA="results/ncs/CAPACITY/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc",
+        file_CAPACITY="results/ncs/CAPACITY/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc",
     script:
-        "../scripts/get_nc_CAPACITYs.py"
+        "../scripts/get_nc_CAPACITY.py"

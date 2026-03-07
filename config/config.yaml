@@ -8,7 +8,6 @@ resources:
 - onwind
 #- solar
 
-
 formats:
 - pdf
 - png
@@ -28,6 +27,7 @@ years:
 
 
 
+
 ########## PARAMETERS
 
 cutout_params:
@@ -41,6 +41,7 @@ CF_params:
     turbine: Vestas_V112_3MW_h100
     correction_factor:  0.93
     cap_per_sqkm: 10
+    CF_threshold: 0.3
   solar:
     panel: CSi
     orientation:
@@ -48,7 +49,7 @@ CF_params:
       azimuth: 180.0
     correction_factor: 0.85
     cap_per_sqkm: 50
-    CF_threshold: 0.3
+
 
 
 map_params:
@@ -69,12 +70,14 @@ map_params:
       units: W/m2
   CF:
     onwind:
-      cmap: 'BuPu'
+      cmap: BuPu
+  CAPACITY:
+    onwind:
+      cmap: YlGn
+      units: MW
+    solar:
+      cmap: YlGn
+      units: MW
 
-ISAcodes:
-- 0
-- 1
-- 2
-- 3
-- 4
+
 

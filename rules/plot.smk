@@ -42,3 +42,17 @@ rule plot_CF:
         map_CF="results/maps/CF/{cutout}/{format}/CF_{resource}_{region}_{cutout}_{year}.{format}"
     script:
         "../scripts/plot_nc_CF.py"
+
+
+rule plot_CAPACITY_CF_ISA:
+    message:
+        "... Plotting CAPACITY map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, ISA: {wildcards.isa}, and format: {wildcards.format}."
+    params:
+        map_params=config["map_params"]
+    input:
+        gdf_NUTS ="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
+        nc_CAPACITY="results/ncs/CAPACITY/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc"
+    output:
+        map_CAPACITY="results/maps/CAPACITY/{cutout}/{format}/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.{format}"
+    script:
+        "../scripts/plot_nc_CAPACITY.py"

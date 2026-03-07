@@ -1,5 +1,5 @@
 import cartopy.crs as ccrs
-from utils import load_and_limit_cutout, load_gdf_nuts_and_local
+from utils import load_and_limit_cutout, load_gdf_nuts_and_local, plot_dataarray_on_map
 
 import matplotlib
 matplotlib.use('Agg')  # This enables backend without GUI (there seems to be problems with projection, PlateCarree)
@@ -60,62 +60,23 @@ units = map_params['cutout'][resource]['units']
 
 
 ##### Make plot
-fig, ax = plt.subplots(figsize=(size, size))
-
-# Plot field without automatic cbar
-mappable = field.plot(
-    ax=ax,
-    x="lon",
-    y="lat",
+plot_dataarray_on_map(
+    data=field,
+    gdf_NUTS=gdf_NUTS,
+    gdf_NUTS_local=gdf_NUTS_local,
+    region=region,
+    file_output=file_map_cutout,
+    x_coord="lon",
+    y_coord="lat",
     cmap=cmap,
+    cbar_label=units,
     vmin=field.min().values.item(),
     vmax=field.max().values.item(),
-    add_colorbar=False
+    size=size,
+    linewidth=linewidth,
+    fontsize=fontsize,
+    #title=
+    bounds_type="gdf"
 )
-
-ax.tick_params(axis="both", labelsize=fontsize*0.8)
-ax.set_xlabel("Longitude", fontsize=fontsize*0.8)
-ax.set_ylabel("Latitude", fontsize=fontsize*0.8)
-
- # Add colorbar out of the figure
-cbar = fig.colorbar(
-    mappable,
-    ax=ax,
-    orientation='vertical',
-    fraction=0.046,
-    pad=0.04   # control size and gap
-)
-
-cbar.set_label(units, fontsize=fontsize)
-cbar.ax.tick_params(labelsize=fontsize)
-
-
-# Add gdf (only regions for the same NUTS level than local)
-gdf_NUTS[gdf_NUTS.index.astype(str).str.len() == len(region)].plot(ax=ax, color="none", edgecolor='grey', linewidth=linewidth)
-
-# Add gdf_local with double linewidth
-gdf_NUTS_local.plot(ax=ax, color="none", edgecolor='black', linewidth=linewidth*2)
-
-# Set limits
-xmin, ymin, xmax, ymax = gdf_NUTS_local.total_bounds
-km_per_lon = 85
-km_per_lat = 111
-center_x = (xmax+xmin)/2
-center_y = (ymax+ymin)/2
-delta_x = xmax-xmin
-delta_y = ymax-ymin        
-delta_km = max([km_per_lon*delta_x, km_per_lat*delta_y])*1.02
-ax.set_xlim(center_x-0.5*delta_km/km_per_lon, center_x+0.5*delta_km/km_per_lon)
-ax.set_ylim(center_y-0.5*delta_km/km_per_lat, center_y+0.5*delta_km/km_per_lat)
-
-
-##### Save figure
-fig.savefig(
-    file_map_cutout,
-    bbox_inches="tight",
-    pad_inches=0.2
-)  
-
-plt.close(fig)
 
 

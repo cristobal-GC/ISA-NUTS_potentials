@@ -36,7 +36,8 @@ rule all:
         expand("results/maps/ISA/{resolution}/{format}/ISA_{resource}_{region}_{resolution}.{format}", resource=RESOURCES, region=REGIONS, resolution=RESOLUTIONS, format=FORMATS),
         expand("results/maps/cutout/{cutout}/{format}/cutout_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS),
         expand("results/maps/CF/{cutout}/{format}/CF_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS),
-        expand("results/ncs/CAPACITY/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, isa=ISAS) ,
+        expand("results/ncs/CAPACITY/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, isa=ISAS),
+        expand("results/maps/CAPACITY/{cutout}/{format}/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, isa=ISAS, format=FORMATS),
 
 
 

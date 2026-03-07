@@ -11,24 +11,24 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 ############################## Unwrap relevant variables
 
 ##### params
-cutout_params = snakemake.params["cutout_params"]
 map_params = snakemake.params["map_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
-file_nc_CF = snakemake.input["nc_CF"]
+file_nc_CAPACITY = snakemake.input["nc_CAPACITY"]
 ##### output
-file_map_CF = snakemake.output["map_CF"]
+file_map_CAPACITY = snakemake.output["map_CAPACITY"]
 ##### wildcards
 cutout = snakemake.wildcards["cutout"]
-year =snakemake.wildcards["year"]
+year = snakemake.wildcards["year"]
 region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
+isa = snakemake.wildcards["isa"]
 
 
 ############################## Operations
 
-##### Load CF
-CF = xr.open_dataarray(file_nc_CF)
+##### Load CAPACITY
+CAPACITY = xr.open_dataarray(file_nc_CAPACITY)
 
 ##### Load gdf_NUTS
 gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)
@@ -41,25 +41,26 @@ size = map_params[resolution]["size"]
 linewidth = map_params[resolution]["linewidth"]
 fontsize = map_params[resolution]["fontsize"]
 
-cmap = map_params['CF'][resource]['cmap']
+cmap = map_params['CAPACITY'][resource]['cmap']
+units = map_params['CAPACITY'][resource]['units']
 
 
 ##### Make plot
 plot_dataarray_on_map(
-    data=CF,
+    data=CAPACITY,
     gdf_NUTS=gdf_NUTS,
     gdf_NUTS_local=gdf_NUTS_local,
     region=region,
-    file_output=file_map_CF,
+    file_output=file_map_CAPACITY,
     x_coord="lon",
     y_coord="lat",
     cmap=cmap,
-    cbar_label="Capacity Factor",
-    vmin=0,
-    vmax=1,
+    cbar_label=units,
+    #vmin=CAPACITY.min().values.item(),
+    #vmax=CAPACITY.max().values.item(),
     size=size,
     linewidth=linewidth,
     fontsize=fontsize,
-    #title=
-    bounds_type="gdf"
+    #title=f"CAPACITY (ISA code: {isa})",
+    bounds_type="data"
 )
