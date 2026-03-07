@@ -1,6 +1,5 @@
-import geopandas as gpd
 import cartopy.crs as ccrs
-import atlite
+from utils import load_and_limit_cutout, load_gdf_nuts_and_local
 
 import matplotlib
 matplotlib.use('Agg')  # This enables backend without GUI (there seems to be problems with projection, PlateCarree)
@@ -30,36 +29,13 @@ resource = snakemake.wildcards["resource"]
 
 ############################## Operations
 
-##### Load cutout 
+##### Load gdf_NUTS and gdf_NUTS_local
+gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)
+
+
+##### Load and limit cutout
 file_cutout = cutout_params[f"{cutout}_{year}"]["path"]
-c = atlite.Cutout(file_cutout)
-
-##### Load gdf_NUTS and apply operations
-gdf_NUTS = (
-    gpd.read_file(file_gdf_NUTS)
-    .set_index("NUTS_ID")            # set index 
-    .to_crs(c.crs)                   # change crs to that of the cutout
-)
-
-##### Filter gdf with only one nuts region    
-gdf_NUTS_local = gdf_NUTS.loc[[region]]
-
-
-##### limit cutout
-# Get region bounding box
-xmin, ymin, xmax, ymax = gdf_NUTS_local.total_bounds
-
-# Add margin of one cell
-margin_x = c.dx
-margin_y = c.dy
-
-xmin -= margin_x
-xmax += margin_x
-ymin -= margin_y
-ymax += margin_y
-
-# Limit cutout
-c = c.sel(bounds=(xmin, ymin, xmax, ymax))
+c = load_and_limit_cutout(file_cutout, gdf_NUTS_local)
 
 
 ##### Compute fields

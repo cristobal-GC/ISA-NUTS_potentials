@@ -32,7 +32,7 @@ years:
 
 cutout_params:
   era5_2023:
-    path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2023-sarah3-era5.nc"
+    path: "/home/aerolinux3/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2023-sarah3-era5.nc"
   ibera5_2023:
     path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/iberia-2023-era5.nc"
 
@@ -40,12 +40,15 @@ CF_params:
   onwind:
     turbine: Vestas_V112_3MW_h100
     correction_factor:  0.93
+    cap_per_sqkm: 10
   solar:
     panel: CSi
     orientation:
       slope: 35
       azimuth: 180.0
     correction_factor: 0.85
+    cap_per_sqkm: 50
+    CF_threshold: 0.3
 
 
 map_params:
@@ -68,5 +71,10 @@ map_params:
     onwind:
       cmap: 'BuPu'
 
-
+ISAcodes:
+- 0
+- 1
+- 2
+- 3
+- 4
 

@@ -1,9 +1,9 @@
 import numpy as np
-import geopandas as gpd
 import pandas as pd
 
 import rasterio
 from rasterio.plot import show
+from utils import load_gdf_nuts_and_local
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -44,14 +44,10 @@ with rasterio.open(file_raster_ISA) as raster_ISA:
 ##### Load df_ISA
 df = pd.read_csv(file_df_ISA, index_col="value")
 
-##### Load gdf_NUTS and apply operations
-gdf_NUTS = (gpd.read_file(file_gdf_NUTS)
-           .set_index("NUTS_ID")            # set index 
-           .to_crs(raster_crs)    # change crs to that of the ISA raster
-)
-
-# Prepare local gdf: filter gdf with only one nuts region    
-gdf_NUTS_local = gdf_NUTS.loc[[region]]
+##### Load gdf_NUTS and change crs to that of the ISA raster 
+gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)
+gdf_NUTS = gdf_NUTS.to_crs(raster_crs)
+gdf_NUTS_local = gdf_NUTS_local.to_crs(raster_crs)
 
 
 

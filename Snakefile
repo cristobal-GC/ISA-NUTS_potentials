@@ -11,9 +11,9 @@ if Path("config/config.yaml").exists():
 
 
 ##### Include rules
-include: "rules/getting.smk",
-include: "rules/plotting.smk"
-include: "rules/retrieving.smk"
+include: "rules/get.smk",
+include: "rules/plot.smk"
+include: "rules/retrieve.smk"
 
 
 
@@ -26,6 +26,7 @@ CUTOUTS = config["cutouts"]
 YEARS = config["years"]
 FORMATS = config["formats"]
 RESOLUTIONS = config["resolutions"]
+ISAS = [0, 1, 2, 3, 4] # config["ISAcodes"]
 
 
 
@@ -34,7 +35,8 @@ rule all:
         "DAG/dag.pdf",
         expand("results/maps/ISA/{resolution}/{format}/ISA_{resource}_{region}_{resolution}.{format}", resource=RESOURCES, region=REGIONS, resolution=RESOLUTIONS, format=FORMATS),
         expand("results/maps/cutout/{cutout}/{format}/cutout_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS),
-        expand("results/maps/CF/{cutout}/{format}/CF_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS) 
+        expand("results/maps/CF/{cutout}/{format}/CF_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS),
+        expand("results/ncs/CAPACITY/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, isa=ISAS) ,
 
 
 

@@ -21,11 +21,10 @@ resource = snakemake.wildcards["resource"]
 
 ############################## Operations
 
-##### Load raster_ISA
-raster_ISA = rasterio.open(file_raster_ISA)
-
-##### Get ISA band
-band = raster_ISA.read(1)
+##### Load raster_ISA and process
+with rasterio.open(file_raster_ISA) as raster_ISA:
+    ##### Get ISA band
+    band = raster_ISA.read(1)
 
 ##### Get areas and percentages of each ISA code
 # Unique values and counts

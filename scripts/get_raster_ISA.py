@@ -1,8 +1,8 @@
-import geopandas as gpd
 import json
 
 import rasterio
 from rasterio.mask import mask
+from utils import load_gdf_nuts_local
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -27,16 +27,15 @@ region = snakemake.wildcards["region"]
 with rasterio.open(file_raster_ISA_miteco) as raster_ISA:
     raster_crs = raster_ISA.crs
 
-    ##### Load gdf_NUTS and apply operations (reproject to raster CRS)
-    gdf_NUTS = (gpd.read_file(file_gdf_NUTS)
-                .set_index("NUTS_ID")            # set index 
-                .loc[[region]]                   # filter region
-                .to_crs(raster_crs)              # change crs to that of the ISA raster
+    ##### Load gdf_NUTS local (one region) and reproject to raster CRS
+    gdf_NUTS_local = (
+        load_gdf_nuts_local(file_gdf_NUTS, region)
+        .to_crs(raster_crs)                         # change crs to that of the ISA raster
     )
 
     ##### Filter raster_ISA with vectorial mask from region
     # Put geometry in GeoJSON-like dict
-    geoms = [json.loads(gdf_NUTS.to_json())["features"][0]["geometry"]]
+    geoms = [json.loads(gdf_NUTS_local.to_json())["features"][0]["geometry"]]
     # Apply filter (returns array with shape (bands, height, width))
     out_image, out_transform = mask(raster_ISA, geoms, crop=True)
     # Update metadata based on source

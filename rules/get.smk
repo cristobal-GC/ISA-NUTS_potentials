@@ -49,9 +49,9 @@ rule get_df_ISA:
     params:
         cutout_params=config["cutout_params"],
     input:        
-        raster_ISA="results/rasters/ISA/raster_ISA_{resource}_{region}.tiff"
+        raster_ISA="results/rasters/ISA/raster_ISA_{resource}_{region}.tiff",
     output:
-        df_ISA="results/dfs/ISA/df_ISA_{resource}_{region}.csv"
+        df_ISA="results/dfs/ISA/df_ISA_{resource}_{region}.csv",
     script:
         "../scripts/get_df_ISA.py"
     
@@ -64,16 +64,48 @@ rule get_df_ISA:
 # Wildcards:
 #   - region    [ES11, ... ]
 #   - resource  [onwind, solar]
+#   - cutout    [era5, ...]
+#   - year      [2013, ...]
 
 rule get_nc_CF:
     message:
         "... Getting nc_CF for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource} and region: {wildcards.region}."
     params:
         cutout_params=config["cutout_params"],
-        CF_params=config["CF_params"]
+        CF_params=config["CF_params"],
     input:
-        gdf_NUTS ="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
+        gdf_NUTS="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
     output:
-        nc_CF="results/ncs/CF/CF_{resource}_{region}_{cutout}_{year}.nc"
+        nc_CF="results/ncs/CF/CF_{resource}_{region}_{cutout}_{year}.nc",
     script:
         "../scripts/get_nc_CF.py"
+
+
+
+#################### get_nc_CAPACITYs
+#
+# This rule is to get the different versions of the capacity matrix
+#
+# Wildcards:
+#   - region    [ES11, ... ]
+#   - resource  [onwind, solar]
+#   - cutout    [era5, ...]
+#   - year      [2013, ...]
+#   - isa       [0, 1, ...]
+
+rule get_nc_CAPACITYs:
+    message:
+        "... Getting nc_CAPACITY matrices for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region} and ISA:{wildcards.isa}."
+    params:
+        cutout_params=config["cutout_params"],
+        CF_params=config["CF_params"],
+    input:
+        gdf_NUTS="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
+        nc_CF="results/ncs/CF/CF_{resource}_{region}_{cutout}_{year}.nc",
+        raster_ISA="results/rasters/ISA/raster_ISA_{resource}_{region}.tiff",
+    output:
+        file_CAPACITY_ISA="results/ncs/CAPACITY/CAPACITY_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc",
+        file_CAPACITY_CF="results/ncs/CAPACITY/CAPACITY_CF_{resource}_{region}_{cutout}_{year}.nc",
+        file_CAPACITY_CF_ISA="results/ncs/CAPACITY/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc",
+    script:
+        "../scripts/get_nc_CAPACITYs.py"

@@ -1,7 +1,7 @@
 import xarray as xr
 import matplotlib.pyplot as plt
-import geopandas as gpd
 import cartopy.crs as ccrs
+from utils import load_gdf_nuts_and_local
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -30,15 +30,8 @@ resource = snakemake.wildcards["resource"]
 ##### Load CF
 CF = xr.open_dataarray(file_nc_CF)
 
-##### Load gdf_NUTS and apply operations
-gdf_NUTS = (
-    gpd.read_file(file_gdf_NUTS)
-    .set_index("NUTS_ID")            # set index 
-    .to_crs(4326)                    # set 4326
-)
-
-##### Filter gdf with only one nuts region    
-gdf_NUTS_local = gdf_NUTS.loc[[region]]
+##### Load gdf_NUTS
+gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)
 
 
 

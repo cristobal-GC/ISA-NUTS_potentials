@@ -1,6 +1,5 @@
-import geopandas as gpd
-import atlite
 import yaml
+from utils import load_and_limit_cutout, load_gdf_nuts_local
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -26,36 +25,13 @@ resource = snakemake.wildcards["resource"]
 
 ############################## Operations
 
-##### Load cutout 
+##### Load gdf_NUTS local (one region)
+gdf_NUTS_local = load_gdf_nuts_local(file_gdf_NUTS, region)
+
+
+##### Load and limit cutout 
 file_cutout = cutout_params[f"{cutout}_{year}"]["path"]
-c = atlite.Cutout(file_cutout)
-
-##### Load gdf_NUTS and apply operations
-gdf_NUTS = (
-    gpd.read_file(file_gdf_NUTS)
-    .set_index("NUTS_ID")            # set index 
-    .to_crs(c.crs)                   # change crs to that of the cutout
-)
-
-##### Filter gdf with only one nuts region    
-gdf_NUTS_local = gdf_NUTS.loc[[region]]
-
-
-##### limit cutout
-# Get region bounding box
-xmin, ymin, xmax, ymax = gdf_NUTS_local.total_bounds
-
-# Add margin of one cell
-margin_x = c.dx
-margin_y = c.dy
-
-xmin -= margin_x
-xmax += margin_x
-ymin -= margin_y
-ymax += margin_y
-
-# Limit cutout
-c = c.sel(bounds=(xmin, ymin, xmax, ymax))
+c = load_and_limit_cutout(file_cutout, gdf_NUTS_local)
 
 
 ##### Obtain CF matrix
