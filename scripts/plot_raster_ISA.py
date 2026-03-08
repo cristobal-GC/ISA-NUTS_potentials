@@ -17,7 +17,7 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 ############################## Unwrap relevant variables
 
 ##### params
-map_params = snakemake.params["map_params"]
+fig_params = snakemake.params["fig_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
 file_raster_ISA = snakemake.input["raster_ISA"]
@@ -53,23 +53,14 @@ gdf_NUTS_local = gdf_NUTS_local.to_crs(raster_crs)
 
 ##### Prepare for plotting
 
-# Define colors
-colors_contraste = [    
-    "#d73027",  #  0: Maximum risk (Red)
-    "#fc8d59",  #  1: Very high (Orange)
-    "#fee08b",  #  2: High (Yellow)
-    "#91bfdb",  #  3: Moderate (Light blue)
-    "#1a9850",  #  4: Low (Green)
-]
+# Get colors and labels from config
+colors_contraste = [fig_params["ISA"]["colors"][cls] for cls in range(5)]
 cmap = ListedColormap(colors_contraste)
 
 # Define legend:
-labels = {    
-        0: f"0: Maximum ({df.loc['0', 'porc']}%)",
-        1: f"1: Very high ({df.loc['1', 'porc']}%)",
-        2: f"2: High ({df.loc['2', 'porc']}%)",
-        3: f"3: Moderate ({df.loc['3', 'porc']}%)",
-        4: f"4: Low ({df.loc['4', 'porc']}%)",
+labels = {
+    cls: f"{cls}: {fig_params['ISA']['labels'][cls]} ({df.loc[str(cls), 'porc']}%)"
+    for cls in range(5)
 }
 
 legend_elements = [
@@ -87,9 +78,9 @@ band_masked = np.ma.masked_equal(band, nodata)
 
 ############################## Create outputs
 
-size = map_params[resolution]["size"]
-linewidth = map_params[resolution]["linewidth"]
-fontsize = map_params[resolution]["fontsize"]
+size = fig_params["sizes"][resolution]["size"]
+linewidth = fig_params["sizes"][resolution]["linewidth"]
+fontsize = fig_params["sizes"][resolution]["fontsize"]
 
 ##### Make plot
 fig, ax = plt.subplots(figsize=(size, size))

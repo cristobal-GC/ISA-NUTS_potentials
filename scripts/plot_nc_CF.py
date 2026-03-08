@@ -12,7 +12,7 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 
 ##### params
 cutout_params = snakemake.params["cutout_params"]
-map_params = snakemake.params["map_params"]
+fig_params = snakemake.params["fig_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
 file_nc_CF = snakemake.input["nc_CF"]
@@ -37,11 +37,11 @@ gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)
 ############################## Create outputs
 
 resolution = 'LR'   # Always Low Resolution
-size = map_params[resolution]["size"]
-linewidth = map_params[resolution]["linewidth"]
-fontsize = map_params[resolution]["fontsize"]
+size = fig_params["sizes"][resolution]["size"]
+linewidth = fig_params["sizes"][resolution]["linewidth"]
+fontsize = fig_params["sizes"][resolution]["fontsize"]
 
-cmap = map_params['CF'][resource]['cmap']
+cmap = fig_params['CF'][resource]['cmap']
 
 
 ##### Make plot

@@ -56,7 +56,7 @@ def validate_and_align_CF_coordinates(CF, cutout):
 
 def get_CAPACITY_matrix(
         file_raster_ISA,
-        ISA_codes,
+        ISA_list,
         gdf_NUTS_local,
         c,
         CF,
@@ -71,7 +71,7 @@ def get_CAPACITY_matrix(
     ##### Add ISA criterion to excluder
     # codes must go in a list, otherwise, the zero index works wrongly
     # Pass the raster path (not an already-open DatasetReader) so atlite can manage opening/closing internally without ending up with closed handles.
-    excluder.add_raster(file_raster_ISA, codes=[ISA_codes], invert=True)
+    excluder.add_raster(file_raster_ISA, codes=ISA_list, invert=True)
     
     ### Define shape from the region geometry
     shape = gdf_NUTS_local.geometry
@@ -88,7 +88,7 @@ def get_CAPACITY_matrix(
     AREA = xr.Dataset.from_dataframe(df.set_index(["y","x"]))["area"]
 
 
-    ### Compute the CAPACITY matrix
+    ##### Compute the CAPACITY matrix
     CAPACITY = AREA * cap_per_sqkm * A * 0.01
 
 
@@ -102,18 +102,22 @@ def get_CAPACITY_matrix(
 cutout_params = snakemake.params["cutout_params"]
 cap_per_sqkm = snakemake.params["cap_per_sqkm"]
 CF_threshold = snakemake.params["CF_threshold"]
+isa = snakemake.params["isa"]
+if isa is None:
+    ISA_list = [0, 1, 2, 3, 4]
+else:
+    ISA_list = [int(isa)]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
 file_nc_CF = snakemake.input["nc_CF"]
 file_raster_ISA = snakemake.input["raster_ISA"]
 ##### output
-file_CAPACITY = snakemake.output["file_CAPACITY"]
+file_CAPACITY = snakemake.output["nc_CAPACITY"]
 ##### wildcards
 cutout = snakemake.wildcards["cutout"]
 year =snakemake.wildcards["year"]
 region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
-ISA = snakemake.wildcards["isa"]
 
 
 
@@ -136,11 +140,9 @@ CF = validate_and_align_CF_coordinates(CF, c)
 
 
 ############################## Create outputs
-ISA_codes = int(ISA)
-
 CAPACITY = get_CAPACITY_matrix(
     file_raster_ISA,
-    ISA_codes,
+    ISA_list,
     gdf_NUTS_local,
     c,
     CF,

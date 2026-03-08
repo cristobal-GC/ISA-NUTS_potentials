@@ -26,20 +26,65 @@ CUTOUTS = config["cutouts"]
 YEARS = config["years"]
 FORMATS = config["formats"]
 RESOLUTIONS = config["resolutions"]
-ISAS = [0, 1, 2, 3, 4] # config["ISAcodes"]
+ISAS = [0, 1, 2, 3, 4]
+
+# This generates FILTERS = [CF, ISA0, ... , ISA4, CF_ISA0, ... , CF_ISA4]
+FILTERS = (
+    ["CF"]
+    + [f"ISA{i}" for i in ISAS]
+    + [f"CF_ISA{i}" for i in ISAS]
+)
 
 
 
 rule all:
     input:
         "DAG/dag.pdf",
-        expand("results/maps/ISA/{resolution}/{format}/ISA_{resource}_{region}_{resolution}.{format}", resource=RESOURCES, region=REGIONS, resolution=RESOLUTIONS, format=FORMATS),
-        expand("results/maps/cutout/{cutout}/{format}/cutout_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS),
-        expand("results/maps/CF/{cutout}/{format}/CF_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, format=FORMATS),
-        expand("results/ncs/CAPACITY/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, isa=ISAS),
-        expand("results/maps/CAPACITY/{cutout}/{format}/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.{format}", cutout=CUTOUTS, year=YEARS, resource=RESOURCES, region=REGIONS, isa=ISAS, format=FORMATS),
 
+        expand(
+            "results/maps/ISA/{resolution}/ISA_{resource}_{region}_{resolution}.{format}",
+            resource=RESOURCES,
+            region=REGIONS,
+            resolution=RESOLUTIONS,
+            format=FORMATS,
+        ),
 
+        expand(
+            "results/maps/cutout/{cutout}/cutout_{resource}_{region}_{year}.{format}",
+            cutout=CUTOUTS,
+            year=YEARS,
+            resource=RESOURCES,
+            region=REGIONS,
+            format=FORMATS,
+        ),
+
+        expand(
+            "results/maps/CF/{cutout}/CF_{resource}_{region}_{year}.{format}",
+            cutout=CUTOUTS,
+            year=YEARS,
+            resource=RESOURCES,
+            region=REGIONS,
+            format=FORMATS,
+        ),
+
+        expand(
+            "results/maps/CAPACITY/{cutout}/CAPACITY_{filters}_{resource}_{region}_{year}.{format}",
+            filters=FILTERS,
+            cutout=CUTOUTS,
+            year=YEARS,
+            resource=RESOURCES,
+            region=REGIONS,
+            format=FORMATS,
+        ),
+
+        expand(
+            "results/figs/CF_CAPACITY/{cutout}/CF_CAPACITY_{resource}_{region}_{year}.{format}",
+            cutout=CUTOUTS,
+            year=YEARS,
+            resource=RESOURCES,
+            region=REGIONS,
+            format=FORMATS,
+        )
 
 
 

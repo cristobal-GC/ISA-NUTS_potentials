@@ -76,15 +76,17 @@ rule get_nc_CF:
     input:
         gdf_NUTS="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
     output:
-        nc_CF="results/ncs/CF/CF_{resource}_{region}_{cutout}_{year}.nc",
+        nc_CF="results/ncs/CF/{cutout}/CF_{resource}_{region}_{year}.nc",
     script:
         "../scripts/get_nc_CF.py"
 
 
 
-#################### get_nc_CAPACITY_CF_ISA
+#################### get_nc_CAPACITY_CF_ISA , get_nc_CAPACITY_CF , get_nc_CAPACITY_ISA
 #
-# This rule is to get the CAPACITY matrix with CF threshold and single ISA code
+# This rule is to get the CAPACITY matrix with one or several filters: CF threshold , ISA code
+#
+# Wildcard 'filters' is constrained to three possibilities. Then, params are conditioned to this filter value. This can be scaled up with more filters
 #
 # Wildcards:
 #   - region    [ES11, ... ]
@@ -93,18 +95,66 @@ rule get_nc_CF:
 #   - year      [2013, ...]
 #   - isa       [0, 1, ...]
 
-rule get_nc_CAPACITY_CF_ISA:
+
+rule get_nc_CAPACITY:
+    wildcard_constraints:
+        resource="onwind|solar",
+        filters="CF|ISA\d+|CF_ISA\d+",
+
     message:
-        "... Getting nc_CAPACITY matrix for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region} and ISA: {wildcards.isa}."
+        "... Getting CAPACITY matrix for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, filters: {wildcards.filters}."
+
     params:
         cutout_params=config["cutout_params"],
+
         cap_per_sqkm=lambda w: config["CF_params"][w.resource]["cap_per_sqkm"],
-        CF_threshold=lambda w: config["CF_params"][w.resource]["CF_threshold"],
+
+        CF_threshold=lambda w: (
+            config["CF_params"][w.resource]["CF_threshold"]
+            if "CF" in w.filters
+            else 0
+        ),
+
+        isa=lambda w: (
+            int(w.filters.split("ISA")[1])
+            if "ISA" in w.filters
+            else None
+        )
+
     input:
         gdf_NUTS="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
-        nc_CF="results/ncs/CF/CF_{resource}_{region}_{cutout}_{year}.nc",
-        raster_ISA="results/rasters/ISA/raster_ISA_{resource}_{region}.tiff",
+        nc_CF="results/ncs/CF/{cutout}/CF_{resource}_{region}_{year}.nc",
+        raster_ISA="results/rasters/ISA/raster_ISA_{resource}_{region}.tiff"
+
     output:
-        file_CAPACITY="results/ncs/CAPACITY/CAPACITY_CF_ISA{isa}_{resource}_{region}_{cutout}_{year}.nc",
+        nc_CAPACITY="results/ncs/CAPACITY/{cutout}/CAPACITY_{filters}_{resource}_{region}_{year}.nc"
+
     script:
         "../scripts/get_nc_CAPACITY.py"
+
+
+#################### get_df_CF_CAPACITY
+#
+# This rule generates a CF-CAPACITY dataframe for a specific ISA code.
+#
+# Wildcards:
+#   - region    [ES11, ... ]
+#   - resource  [onwind, solar]
+#   - year      [2013, ...]
+#   - isa       [0, 1, ...]
+
+rule get_df_CF_CAPACITY:
+    message:
+        "... Getting df_CF_CAPACITY for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, ISA: {wildcards.isa}."
+    input:
+        nc_CF="results/ncs/CF/{cutout}/CF_{resource}_{region}_{year}.nc",
+        nc_CAPACITY="results/ncs/CAPACITY/{cutout}/CAPACITY_ISA{isa}_{resource}_{region}_{year}.nc",
+    output:
+        df_CF_CAPACITY="results/dfs/CF_CAPACITY/{cutout}/df_CF_CAPACITY_ISA{isa}_{resource}_{region}_{year}.csv"
+    script:
+        "../scripts/get_df_CF_CAPACITY.py"
+
+
+
+
+

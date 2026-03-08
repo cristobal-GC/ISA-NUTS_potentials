@@ -2,14 +2,14 @@
 ########## WILDCARDS
 regions:
 - ES11
-- ES111
+#- ES111
 
 resources:
 - onwind
 #- solar
 
 formats:
-- pdf
+#- pdf
 - png
 
 resolutions:
@@ -52,15 +52,16 @@ CF_params:
 
 
 
-map_params:
-  LR:
-    size: 12
-    linewidth: 1.5
-    fontsize: 16
-  HR:
-    size: 36
-    linewidth: 4.5
-    fontsize: 48
+fig_params:
+  sizes:
+    LR:
+      size: 12
+      linewidth: 1.5
+      fontsize: 16
+    HR:
+      size: 36
+      linewidth: 4.5
+      fontsize: 48
   cutout:
     onwind:
       cmap: viridis
@@ -78,6 +79,22 @@ map_params:
     solar:
       cmap: YlGn
       units: MW
+  CF_CAPACITY:
+    size: 12
+    fontsize: 16
+  ISA:
+    colors:
+      0: "#d73027"
+      1: "#fc8d59"
+      2: "#fee08b"
+      3: "#91bfdb"
+      4: "#1a9850"
+    labels:
+      0: "Maximum"
+      1: "Very high"
+      2: "High"
+      3: "Moderate"
+      4: "Low"
 
 
 

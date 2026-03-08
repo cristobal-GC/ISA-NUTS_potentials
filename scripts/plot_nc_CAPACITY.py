@@ -11,7 +11,7 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 ############################## Unwrap relevant variables
 
 ##### params
-map_params = snakemake.params["map_params"]
+fig_params = snakemake.params["fig_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
 file_nc_CAPACITY = snakemake.input["nc_CAPACITY"]
@@ -22,8 +22,10 @@ cutout = snakemake.wildcards["cutout"]
 year = snakemake.wildcards["year"]
 region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
-isa = snakemake.wildcards["isa"]
-
+try:
+    ISA_list = [int(snakemake.wildcards["isa"])]
+except (KeyError, AttributeError):
+    ISA_list = [0, 1, 2, 3, 4]
 
 ############################## Operations
 
@@ -37,12 +39,12 @@ gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)
 ############################## Create outputs
 
 resolution = 'LR'   # Always Low Resolution
-size = map_params[resolution]["size"]
-linewidth = map_params[resolution]["linewidth"]
-fontsize = map_params[resolution]["fontsize"]
+size = fig_params["sizes"][resolution]["size"]
+linewidth = fig_params["sizes"][resolution]["linewidth"]
+fontsize = fig_params["sizes"][resolution]["fontsize"]
 
-cmap = map_params['CAPACITY'][resource]['cmap']
-units = map_params['CAPACITY'][resource]['units']
+cmap = fig_params['CAPACITY'][resource]['cmap']
+units = fig_params['CAPACITY'][resource]['units']
 
 
 ##### Make plot
@@ -61,6 +63,6 @@ plot_dataarray_on_map(
     size=size,
     linewidth=linewidth,
     fontsize=fontsize,
-    #title=f"CAPACITY (ISA code: {isa})",
+    title=f"Total capacity: {CAPACITY.sum().values.item():.2f} MW",
     bounds_type="data"
 )
