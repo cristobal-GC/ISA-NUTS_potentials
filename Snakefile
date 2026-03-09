@@ -1,11 +1,10 @@
 
 from pathlib import Path
+import re
 
 
 ########## Set default config file if it exists
-
 if Path("config/config.yaml").exists():
-
     configfile: "config/config.yaml"
 
 
@@ -17,10 +16,8 @@ include: "rules/retrieve.smk"
 
 
 
-
 ##### Retrieve relevant information from config file
-
-REGIONS = config["regions"]
+REGIONS_CFG = config["regions"]
 RESOURCES = config["resources"]
 CUTOUTS = config["cutouts"]
 YEARS = config["years"]
@@ -28,63 +25,130 @@ FORMATS = config["formats"]
 RESOLUTIONS = config["resolutions"]
 ISAS = [0, 1, 2, 3, 4]
 
-# This generates FILTERS = [CF, ISA0, ... , ISA4, CF_ISA0, ... , CF_ISA4]
+
+
+# This function infers NUTS level from explicit region patterns:
+# NUTS2: ABxy (A,B uppercase letters; x,y digits)
+# NUTS3: ABxyz (A,B uppercase letters; x,y,z digits)
+def infer_nuts_level(region):
+    if re.fullmatch(r"[A-Z]{2}\d{2}", region):
+        return "NUTS2"
+    if re.fullmatch(r"[A-Z]{2}\d{3}", region):
+        return "NUTS3"
+    raise ValueError(
+        f"Invalid region code '{region}'. Expected NUTS2 pattern ABxy or NUTS3 pattern ABxyz."
+    )
+
+
+
+# This generates REGION_NUTS_PAIRS = [(NUTS2, region1), (NUTS2, region2), ..., (NUTS3, regionX), ...]
+if isinstance(REGIONS_CFG, dict):
+    VALID_NUTS_KEYS = {"NUTS2", "NUTS3"}
+    invalid_keys = [key for key in REGIONS_CFG if key not in VALID_NUTS_KEYS]
+    if invalid_keys:
+        raise ValueError(
+            f"Invalid regions keys {invalid_keys}. Expected only 'NUTS2' and/or 'NUTS3'."
+        )
+
+    REGION_NUTS_PAIRS = [
+        (nuts, region)
+        for nuts, regions in REGIONS_CFG.items()
+        for region in (regions or [])
+    ]
+
+    for nuts, region in REGION_NUTS_PAIRS:
+        inferred = infer_nuts_level(region)
+        if inferred != nuts:
+            raise ValueError(
+                f"Region '{region}' does not match key '{nuts}'. It matches '{inferred}'."
+            )
+else:
+    REGION_NUTS_PAIRS = [(infer_nuts_level(region), region) for region in REGIONS_CFG]
+
+if not REGION_NUTS_PAIRS:
+    raise ValueError(
+        "No regions configured. Define regions in config/config.yaml as a list or under regions.NUTS2/NUTS3."
+    )
+
+
+
+# This generates FILTERS to apply to the CAPACITY matrix:
+#   FILTERS = [CFth, ISA0, ... , ISA4, CFth_ISA0, ... , CFth_ISA4]
 FILTERS = (
-    ["CF"]
+    ["CFth"]
     + [f"ISA{i}" for i in ISAS]
-    + [f"CF_ISA{i}" for i in ISAS]
+    + [f"CFth_ISA{i}" for i in ISAS]
 )
+
 
 
 
 rule all:
     input:
-        "DAG/dag.pdf",
+        #"DAG/dag.pdf",
+        "DAG/rulegraph.pdf",
+        #"DAG/filegraph.pdf",
 
-        expand(
-            "results/maps/ISA/{resolution}/ISA_{resource}_{region}_{resolution}.{format}",
-            resource=RESOURCES,
-            region=REGIONS,
-            resolution=RESOLUTIONS,
-            format=FORMATS,
-        ),
+        [
+            f"results/maps/ISA/{nuts}/{resolution}/ISA_{resource}_{region}_{resolution}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for resource in RESOURCES
+            for resolution in RESOLUTIONS
+            for fmt in FORMATS
+        ],
 
-        expand(
-            "results/maps/cutout/{cutout}/cutout_{resource}_{region}_{year}.{format}",
-            cutout=CUTOUTS,
-            year=YEARS,
-            resource=RESOURCES,
-            region=REGIONS,
-            format=FORMATS,
-        ),
+        [
+            f"results/maps/cutout/{cutout}/{nuts}/cutout_{resource}_{region}_{year}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ],
 
-        expand(
-            "results/maps/CF/{cutout}/CF_{resource}_{region}_{year}.{format}",
-            cutout=CUTOUTS,
-            year=YEARS,
-            resource=RESOURCES,
-            region=REGIONS,
-            format=FORMATS,
-        ),
+        [
+            f"results/maps/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ],
 
-        expand(
-            "results/maps/CAPACITY/{cutout}/CAPACITY_{filters}_{resource}_{region}_{year}.{format}",
-            filters=FILTERS,
-            cutout=CUTOUTS,
-            year=YEARS,
-            resource=RESOURCES,
-            region=REGIONS,
-            format=FORMATS,
-        ),
+        [
+            f"results/maps/CAPACITY/{cutout}/{nuts}/CAPACITY_{filters}_{resource}_{region}_{year}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for filters in FILTERS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ],
 
-        expand(
-            "results/figs/CF_CAPACITY/{cutout}/CF_CAPACITY_{resource}_{region}_{year}.{format}",
-            cutout=CUTOUTS,
-            year=YEARS,
-            resource=RESOURCES,
-            region=REGIONS,
-            format=FORMATS,
-        )
+        [
+            f"results/figs/CF_CAPACITY/{cutout}/{nuts}/CF_CAPACITY_{resource}_{region}_{year}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ],
+
+        [
+            f"results/dfs/CAPACITY/{cutout}/{nuts}/df_CAPACITY_{resource}_{region}_{year}.csv"
+            for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+        ],
+
+        [
+            f"results/dfs/summary/{cutout}/{nuts}/df_summary_{resource}_{year}.csv"
+            for nuts in sorted({nuts for nuts, _ in REGION_NUTS_PAIRS})
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+        ]
 
 
 
@@ -136,34 +200,4 @@ rule filegraph:
         )
 
 
-        
-
-# rule pattern
-#     params:
-#         param1=config["field1"]
-#         param2=config["field2"]
-#         param3=lambda wc: config["field"][wc.sample]  <  param that depends on wildcard
-#     input:
-#         label_input=file_input
-#     output:
-#         label_output=file_output
-#     script:
-#         "path_to_script.py"
-
-
-
-# To use within a python script:
-#
-#   snakemake.wildcards["sample"]  <  where {sample} is the wildcard
-#   snakemake.params["label"]
-#   snakemake.input["label_input"]
-#   snakemake.output["label_output"]
-#   snakemake.config  <  not recommended, better to use params, except for global params
-#   snakemake.log
-
-
-##### Special functions
-#
-# workflow.source_path() > to get paths relative to root snakefile
-#                        > useful for pointing at scripts in rules/ folder
-# workflow.basedir > absolute path to Snakefile 
+     

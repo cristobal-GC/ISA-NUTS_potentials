@@ -59,7 +59,7 @@ cmap = ListedColormap(colors_contraste)
 
 # Define legend:
 labels = {
-    cls: f"{cls}: {fig_params['ISA']['labels'][cls]} ({df.loc[str(cls), 'porc']}%)"
+    cls: f"{cls}: {fig_params['ISA']['labels'][cls]} ({df.loc[str(cls), 'porc']:.2f}%)"
     for cls in range(5)
 }
 
@@ -111,27 +111,32 @@ ax.legend(
     bbox_to_anchor=(1.5, 1),  # legend out of the plot    
 )
 
-# Tight layout
-plt.tight_layout()
-
-
-# Set limits
+# Set limits using same logic as plot_dataarray_on_map
 xmin, ymin, xmax, ymax = gdf_NUTS_local.total_bounds
-center_x = (xmax+xmin)/2
-center_y = (ymax+ymin)/2
-delta_x = xmax-xmin
-delta_y = ymax-ymin
-delta = max([delta_x, delta_y])
-ax.set_xlim(center_x-0.51*delta, center_x+0.51*delta)
-ax.set_ylim(center_y-0.51*delta, center_y+0.51*delta)
+km_per_lon = 85
+km_per_lat = 111
+center_x = (xmax + xmin) / 2
+center_y = (ymax + ymin) / 2
+delta_x = xmax - xmin
+delta_y = ymax - ymin
+delta_km = max([km_per_lon*delta_x, km_per_lat*delta_y]) * 1.02
+ax.set_xlim(
+    center_x - 0.5*delta_km/km_per_lon,
+    center_x + 0.5*delta_km/km_per_lon
+)
+ax.set_ylim(
+    center_y - 0.5*delta_km/km_per_lat,
+    center_y + 0.5*delta_km/km_per_lat
+)
 
-ax.set_xticks([])
-ax.set_yticks([])
+ax.tick_params(axis="both", labelsize=fontsize*0.8)
+ax.set_xlabel("Lon", fontsize=fontsize*0.8)
+ax.set_ylabel("Lat", fontsize=fontsize*0.8)
 
 
 ##### Save figure
 fig.savefig(file_map_ISA,
             bbox_inches="tight",
-            pad_inches=0)  
+            pad_inches=0.2)  
 
 plt.close(fig)

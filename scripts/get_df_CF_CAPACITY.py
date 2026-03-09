@@ -37,8 +37,8 @@ df = (
     .sort_values("CF", ascending=False)
 )
 
-df["CAPACITY"] = df["CAPACITY"].round(2)
-df["CUM_CAPACITY"] = df["CAPACITY"].cumsum().round(2)
+df["CAPACITY"] = df["CAPACITY"].round(6)
+df["CUM_CAPACITY"] = df["CAPACITY"].cumsum().round(6)
 
 
 ############################## Create outputs

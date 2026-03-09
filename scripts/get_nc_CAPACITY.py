@@ -1,5 +1,6 @@
 import xarray as xr
 import logging
+import rasterio
 
 from atlite.gis import ExclusionContainer
 from utils import load_and_limit_cutout, load_gdf_nuts_local
@@ -64,22 +65,34 @@ def get_CAPACITY_matrix(
         cap_per_sqkm,
 ):
     """Compute the CAPACITY matrix for a given region, combining two criteria: ISA_codes and CF threshold."""
+
+    if gdf_NUTS_local.crs is None:
+        raise ValueError("gdf_NUTS_local must have a defined CRS.")
     
     ##### Create excluder container, with 25x25 m resolution
-    excluder = ExclusionContainer(res=25)
+    excluder = ExclusionContainer(res=25) # no need to specify CRS here, by default it is 3035, and atlite will handle reprojection internally when adding the raster criterion, as long as we provide the correct input raster CRS.
+
+    with rasterio.open(file_raster_ISA) as raster_ISA:
+        raster_crs = raster_ISA.crs
+
+    if raster_crs is None:
+        raise ValueError(f"Raster {file_raster_ISA} has no CRS. Cannot build ExclusionContainer mask reliably.")
+
+    _log_and_print(
+        f"[get_CAPACITY_matrix] CRS chain -> gdf: {gdf_NUTS_local.crs}, raster_ISA: {raster_crs}, excluder: {excluder.crs}, cutout: {c.crs}"
+    )
 
     ##### Add ISA criterion to excluder
     # codes must go in a list, otherwise, the zero index works wrongly
     # Pass the raster path (not an already-open DatasetReader) so atlite can manage opening/closing internally without ending up with closed handles.
-    excluder.add_raster(file_raster_ISA, codes=ISA_list, invert=True)
+    excluder.add_raster(file_raster_ISA, codes=ISA_list, invert=True, crs=raster_crs) # crs is the input raster crs, not the output excluder crs, because atlite will handle the reprojection internally when building the mask, and it needs to know the input raster CRS to do it correctly. If we pass the excluder CRS (which is 3035), atlite will assume the input raster is already in 3035, which is not the case, and the resulting mask will be wrong.
     
-    ### Define shape from the region geometry
+    ### Define shape from the region geometry in cutout CRS
     shape = gdf_NUTS_local.geometry
 
     ##### Add CF threshold criterion when computing A matrix
-    A = 100*(
-        c.availabilitymatrix(shape, excluder).where(CF >= CF_threshold, 0)
-    )
+    A = c.availabilitymatrix(shape, excluder).where(CF >= CF_threshold, 0)
+    
 
     ##### Generate CAPACITY matrices 
     # Generatearea matrix, AREA, in km2
@@ -89,10 +102,10 @@ def get_CAPACITY_matrix(
 
 
     ##### Compute the CAPACITY matrix
-    CAPACITY = AREA * cap_per_sqkm * A * 0.01
+    CAPACITY = AREA * cap_per_sqkm * A
 
 
-    return CAPACITY.round(2)
+    return CAPACITY.round(6)
 
 
 

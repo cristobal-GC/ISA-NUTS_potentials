@@ -1,8 +1,14 @@
 
 ########## WILDCARDS
 regions:
-- ES11
-#- ES111
+  NUTS2:
+  - ES11
+  - ES41
+  NUTS3: []
+  #- ES111
+  #- ES112
+  #- ES113
+  #- ES114
 
 resources:
 - onwind
@@ -32,7 +38,7 @@ years:
 
 cutout_params:
   era5_2023:
-    path: "/home/aerolinux3/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2023-sarah3-era5.nc"
+    path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2023-sarah3-era5.nc"
   ibera5_2023:
     path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/iberia-2023-era5.nc"
 
