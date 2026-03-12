@@ -5,7 +5,7 @@ import cartopy.crs as ccrs
 import logging
 import re
 from pathlib import Path
-from utils import load_gdf_nuts_and_local, plot_dataarray_on_map
+from utils import load_gdf_nuts_and_local, plot_dataarray_on_map, log_xarray_spatial_info
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -41,6 +41,7 @@ resource = snakemake.wildcards["resource"]
 
 ##### Load CF
 CF = xr.open_dataarray(file_nc_CF)
+log_xarray_spatial_info(CF, source_label=file_nc_CF)
 
 ##### Load gdf_NUTS
 gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)

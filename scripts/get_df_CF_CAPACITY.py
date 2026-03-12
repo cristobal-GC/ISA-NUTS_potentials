@@ -1,4 +1,5 @@
 import xarray as xr
+from utils import log_xarray_spatial_info
 
 from typing import Any
 snakemake: Any
@@ -18,6 +19,8 @@ file_df_CF_CAPACITY = snakemake.output["df_CF_CAPACITY"]
 ##### Load inputs
 CAPACITY = xr.open_dataarray(file_nc_CAPACITY)
 CF = xr.open_dataarray(file_nc_CF)
+log_xarray_spatial_info(CAPACITY, source_label=file_nc_CAPACITY)
+log_xarray_spatial_info(CF, source_label=file_nc_CF)
 
 ##### Align by shared coordinates (not necessary if we are sure they already align)
 #CAPACITY, CF = xr.align(CAPACITY, CF, join="inner")

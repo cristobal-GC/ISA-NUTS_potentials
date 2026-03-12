@@ -4,6 +4,7 @@ import re
 import numpy as np
 import pandas as pd
 import xarray as xr
+from utils import log_xarray_spatial_info
 
 from typing import Any
 snakemake: Any
@@ -38,6 +39,7 @@ for file_path in files_nc_CAPACITY:
 
     da = xr.open_dataarray(file_path)
     try:
+        log_xarray_spatial_info(da, source_label=file_path)
         capacity_by_isa[isa] = round(float(np.nansum(da.values)), 6)
     finally:
         da.close()

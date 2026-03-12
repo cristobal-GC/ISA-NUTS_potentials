@@ -3,7 +3,7 @@ import pandas as pd
 
 import rasterio
 from rasterio.plot import show
-from utils import load_gdf_nuts_and_local
+from utils import load_gdf_nuts_and_local, log_raster_spatial_info
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -36,6 +36,8 @@ format = snakemake.wildcards["format"]
 
 ##### Load raster_ISA and read required attributes
 with rasterio.open(file_raster_ISA) as raster_ISA:
+    log_raster_spatial_info(raster_ISA, source_label=file_raster_ISA)
+
     raster_crs = raster_ISA.crs
     transform = raster_ISA.transform
     band = raster_ISA.read(1)

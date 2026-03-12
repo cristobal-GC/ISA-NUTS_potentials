@@ -3,7 +3,13 @@ import logging
 import rasterio
 
 from atlite.gis import ExclusionContainer
-from utils import load_and_limit_cutout, load_gdf_nuts_local, resolve_user_home_path
+from utils import (
+    load_and_limit_cutout,
+    load_gdf_nuts_local,
+    resolve_user_home_path,
+    log_raster_spatial_info,
+    log_xarray_spatial_info,
+)
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -73,6 +79,7 @@ def get_CAPACITY_matrix(
     excluder = ExclusionContainer(res=25) # no need to specify CRS here, by default it is 3035, and atlite will handle reprojection internally when adding the raster criterion, as long as we provide the correct input raster CRS.
 
     with rasterio.open(file_raster_ISA) as raster_ISA:
+        log_raster_spatial_info(raster_ISA, source_label=file_raster_ISA)
         raster_crs = raster_ISA.crs
 
     if raster_crs is None:
@@ -147,6 +154,7 @@ c = load_and_limit_cutout(file_cutout, gdf_NUTS_local)
 
 ##### Load CF
 CF = xr.open_dataarray(file_nc_CF)
+log_xarray_spatial_info(CF, source_label=file_nc_CF)
 # Validate CF coordinates match cutout grid
 CF = validate_and_align_CF_coordinates(CF, c)
 

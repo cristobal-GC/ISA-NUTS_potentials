@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import rasterio
 from rasterio.warp import calculate_default_transform
+from utils import log_raster_spatial_info
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -63,6 +64,8 @@ def calculate_pixel_area_in_equal_area_crs(raster, target_crs='EPSG:3035'):
 
 ##### Load raster_ISA and process
 with rasterio.open(file_raster_ISA) as raster_ISA:
+    log_raster_spatial_info(raster_ISA, source_label=file_raster_ISA)
+
     ##### Get ISA band
     band = raster_ISA.read(1)
     

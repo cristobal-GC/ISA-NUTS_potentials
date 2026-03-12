@@ -1,7 +1,9 @@
 import atlite
 import geopandas as gpd
 import logging
+import numpy as np
 from pathlib import Path
+import xarray as xr
 
 
 logger = logging.getLogger(__name__)
@@ -10,6 +12,100 @@ logger = logging.getLogger(__name__)
 def _log_and_print(message):
     logger.info(message)
     print(message)
+
+
+def _select_spatial_dims_xarray(data):
+    known_x = {"x", "lon", "longitude", "easting", "eastings"}
+    known_y = {"y", "lat", "latitude", "northing", "northings"}
+
+    dims = list(data.dims)
+    selected = []
+    for dim in dims:
+        dim_lower = dim.lower()
+        if dim_lower in known_x or dim_lower in known_y:
+            selected.append(dim)
+
+    if len(selected) < 2:
+        for coord_name in data.coords:
+            coord = data.coords[coord_name]
+            axis = str(coord.attrs.get("axis", "")).upper()
+            if axis in {"X", "Y"} and coord_name in dims and coord_name not in selected:
+                selected.append(coord_name)
+
+    if len(selected) < 2:
+        non_spatial_guess_exclude = {"time", "month", "year", "step", "band", "variable"}
+        for dim in dims:
+            if dim.lower() not in non_spatial_guess_exclude and dim not in selected:
+                selected.append(dim)
+            if len(selected) >= 2:
+                break
+
+    if len(selected) < 2:
+        for dim in dims:
+            if dim not in selected:
+                selected.append(dim)
+            if len(selected) >= 2:
+                break
+
+    return selected[:2]
+
+
+def _extract_xarray_crs(data):
+    for key in ["crs", "spatial_ref"]:
+        if key in data.attrs:
+            return data.attrs[key]
+
+    grid_mapping_name = data.attrs.get("grid_mapping")
+    if grid_mapping_name and grid_mapping_name in data.coords:
+        coord = data.coords[grid_mapping_name]
+        for key in ["spatial_ref", "crs_wkt", "proj4_params", "crs"]:
+            if key in coord.attrs:
+                return coord.attrs[key]
+
+    return "unknown"
+
+
+def log_xarray_spatial_info(data, source_label):
+    spatial_dims = _select_spatial_dims_xarray(data)
+    crs = _extract_xarray_crs(data)
+
+    details = []
+    for dim in spatial_dims:
+        n_values = int(data.sizes[dim]) if dim in data.sizes else None
+        if dim in data.coords:
+            coord_values = data.coords[dim].values
+            if coord_values.size > 0 and np.issubdtype(np.asarray(coord_values).dtype, np.number):
+                dim_min = float(np.nanmin(coord_values))
+                dim_max = float(np.nanmax(coord_values))
+            else:
+                dim_min = "unknown"
+                dim_max = "unknown"
+        else:
+            dim_min = "unknown"
+            dim_max = "unknown"
+
+        details.append((dim, n_values, dim_min, dim_max))
+
+    _log_and_print(f"[spatial-log] source={source_label} | type=xarray | crs={crs}")
+    _log_and_print(f"[spatial-log] source={source_label} | spatial_dims={[dim for dim, _, _, _ in details]}")
+    for dim, n_values, dim_min, dim_max in details:
+        _log_and_print(
+            f"[spatial-log] source={source_label} | dim={dim} | n={n_values} | min={dim_min} | max={dim_max}"
+        )
+
+
+def log_raster_spatial_info(raster, source_label):
+    if raster.crs is not None and raster.crs.is_geographic:
+        x_name, y_name = "lon", "lat"
+    else:
+        x_name, y_name = "x", "y"
+
+    left, bottom, right, top = raster.bounds
+
+    _log_and_print(f"[spatial-log] source={source_label} | type=raster | crs={raster.crs}")
+    _log_and_print(f"[spatial-log] source={source_label} | spatial_dims={[x_name, y_name]}")
+    _log_and_print(f"[spatial-log] source={source_label} | dim={x_name} | n={raster.width} | min={left} | max={right}")
+    _log_and_print(f"[spatial-log] source={source_label} | dim={y_name} | n={raster.height} | min={bottom} | max={top}")
 
 
 def _subtract_excluded_geometries(gdf_local, gdf_all):
@@ -109,6 +205,8 @@ def load_gdf_nuts_and_local(file_gdf_NUTS, region):
 def load_and_limit_cutout(file_cutout, gdf_local):
 
     c = atlite.Cutout(file_cutout)
+
+    log_xarray_spatial_info(c.data, source_label=f"cutout:{file_cutout}")
 
     _log_and_print(
         f"[load_and_limit_cutout] Cutout loaded. CRS is {c.crs}."
