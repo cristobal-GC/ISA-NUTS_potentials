@@ -2,7 +2,7 @@
 ########## WILDCARDS
 regions:
   NUTS0:
-  - ES
+  ##########- ES
   NUTS2:
   - ES11 # Galicia
   - ES12 # Principado de Asturias
@@ -20,8 +20,8 @@ regions:
   - ES53 # Illes Balears
   - ES61 # Andalucía
   - ES62 # Región de Murcia
-  - ES63 # Ciudad Autónoma de Ceuta
-  - ES64 # Ciudad Autónoma de Melilla
+  ##########- ES63 # Ciudad Autónoma de Ceuta
+  ##########- ES64 # Ciudad Autónoma de Melilla
   ##########- ES70 # Canarias
   NUTS3:
   - ES111 # A Coruña
@@ -74,9 +74,9 @@ regions:
   - ES617 # Málaga
   - ES618 # Sevilla
   - ES620 # Murcia
-  - ES630 # Ceuta
-  - ES640 # Melilla
-  - ES703 # El Hierro
+  ##########- ES630 # Ceuta
+  ##########- ES640 # Melilla
+  ##########- ES703 # El Hierro
   ##########- ES704 # Fuerteventura
   ##########- ES705 # Gran Canaria
   ##########- ES706 # La Gomera
