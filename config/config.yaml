@@ -1,7 +1,7 @@
 
 ########## WILDCARDS
 regions:
-  NUTS0:
+  NUTS0: []
   ##########- ES
   NUTS2:
   - ES11 # Galicia
