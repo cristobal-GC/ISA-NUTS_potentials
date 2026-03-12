@@ -1,5 +1,5 @@
 import yaml
-from utils import load_and_limit_cutout, load_gdf_nuts_local
+from utils import load_and_limit_cutout, load_gdf_nuts_local, resolve_user_home_path
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -30,7 +30,7 @@ gdf_NUTS_local = load_gdf_nuts_local(file_gdf_NUTS, region)
 
 
 ##### Load and limit cutout 
-file_cutout = cutout_params[f"{cutout}_{year}"]["path"]
+file_cutout = resolve_user_home_path(cutout_params[f"{cutout}_{year}"]["path"])
 c = load_and_limit_cutout(file_cutout, gdf_NUTS_local)
 
 

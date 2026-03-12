@@ -12,7 +12,7 @@
 
 rule plot_ISA:
     wildcard_constraints:
-        nuts="NUTS2|NUTS3",
+        nuts="NUTS0|NUTS2|NUTS3",
     message:
         "... Plotting ISA map for resource: {wildcards.resource}, region: {wildcards.region}, resolution: {wildcards.resolution} format: {wildcards.format}."
     params:
@@ -40,7 +40,7 @@ rule plot_ISA:
 
 rule plot_cutout:
     wildcard_constraints:
-        nuts="NUTS2|NUTS3",
+        nuts="NUTS0|NUTS2|NUTS3",
     message:
         "... Plotting cutout map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:
@@ -57,6 +57,12 @@ rule plot_cutout:
 
 #################### plot_CF
 #
+# NOTE:
+#   - Color scale (vmin/vmax) is computed inside plot_nc_CF.py from all
+#     df_CF_CAPACITY files for the same {cutout, nuts, resource, year}
+#     and all regions in that NUTS level (ISA0..ISA4).
+#   - This enforces a common absolute CF scale across regions.
+#
 # Wildcards:
 #   - cutout     [era5, ...]
 #   - nuts       [NUTS2, NUTS3]
@@ -67,15 +73,23 @@ rule plot_cutout:
 
 rule plot_CF:
     wildcard_constraints:
-        nuts="NUTS2|NUTS3",
+        nuts="NUTS0|NUTS2|NUTS3",
     message:
         "... Plotting CF map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:
-        cutout_params=config["cutout_params"],
         fig_params=config["fig_params"]
     input:
         gdf_NUTS ="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
-        nc_CF="results/ncs/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.nc"
+        nc_CF="results/ncs/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.nc",
+        dfs_CF_CAPACITY=lambda w: expand(
+            "results/dfs/CF_CAPACITY/{cutout}/{nuts}/df_CF_CAPACITY_ISA{isa}_{resource}_{region}_{year}.csv",
+            cutout=w.cutout,
+            nuts=w.nuts,
+            isa=[0, 1, 2, 3, 4],
+            resource=w.resource,
+            region=get_regions_for_nuts(w),
+            year=w.year,
+        )
     output:
         map_CF="results/maps/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.{format}"
     script:
@@ -96,7 +110,7 @@ rule plot_CF:
 
 rule plot_CAPACITY_CF_ISA:
     wildcard_constraints:
-        nuts="NUTS2|NUTS3",
+        nuts="NUTS0|NUTS2|NUTS3",
         resource="onwind|solar",
         filters=r"CFth|ISA\d+|CFth_ISA\d+",
     message:
@@ -125,7 +139,7 @@ rule plot_CAPACITY_CF_ISA:
 
 rule plot_df_CF_CAPACITY:
     wildcard_constraints:
-        nuts="NUTS2|NUTS3",
+        nuts="NUTS0|NUTS2|NUTS3",
     message:
         "... Plotting CF vs CUM_CAPACITY curves for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:

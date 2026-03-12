@@ -1,6 +1,7 @@
 import atlite
 import geopandas as gpd
 import logging
+from pathlib import Path
 
 
 logger = logging.getLogger(__name__)
@@ -9,6 +10,60 @@ logger = logging.getLogger(__name__)
 def _log_and_print(message):
     logger.info(message)
     print(message)
+
+
+# NUTS_IDs whose geometries are excluded from their parent region.
+# Currently: Canary Islands (ES7), Ceuta (ES63), Melilla (ES64).
+_EXCLUDED_NUTS_GEOMETRY = ['ES7', 'ES63', 'ES64']
+
+
+def _subtract_excluded_geometries(gdf_local, gdf_all):
+    """
+    Subtract excluded sub-regional geometries from gdf_local.
+
+    Some NUTS_IDs (e.g. islands or exclaves defined in _EXCLUDED_NUTS_GEOMETRY)
+    are removed from the geometry of gdf_local when they are sub-regions of the
+    requested region (i.e. their NUTS_ID exists in gdf_all and their geometry
+    overlaps with gdf_local).
+
+    Parameters
+    ----------
+    gdf_local : geopandas.GeoDataFrame
+        Geometry of the requested region (one or more rows).
+    gdf_all : geopandas.GeoDataFrame
+        Full NUTS GeoDataFrame (indexed by NUTS_ID), used to look up the
+        excluded geometries.
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        gdf_local with the excluded geometries subtracted.
+    """
+    from shapely.ops import unary_union
+
+    ids_to_exclude = [nid for nid in _EXCLUDED_NUTS_GEOMETRY if nid in gdf_all.index]
+    if not ids_to_exclude:
+        return gdf_local
+
+    exclude_geom = unary_union(gdf_all.loc[ids_to_exclude].geometry)
+
+    gdf_local = gdf_local.copy()
+    gdf_local["geometry"] = gdf_local.geometry.difference(exclude_geom)
+
+    _log_and_print(
+        f"[_subtract_excluded_geometries] Subtracted geometries for: {ids_to_exclude}"
+    )
+
+    return gdf_local
+
+
+def resolve_user_home_path(path_value):
+    path = Path(path_value).expanduser()
+
+    if path.is_absolute():
+        return str(path)
+
+    return str(Path.home() / path)
 
 
 
@@ -22,7 +77,11 @@ def load_gdf_nuts_local(file_gdf_NUTS, region):
         f"[load_gdf_nuts_local] Loaded gdf_NUTS for region: {region}, CRS: {gdf_NUTS.crs}"
     )
 
-    return gdf_NUTS.loc[[region]]
+    gdf_NUTS_local = gdf_NUTS.loc[[region]]
+    if region == 'ES':
+        gdf_NUTS_local = _subtract_excluded_geometries(gdf_NUTS_local, gdf_NUTS)
+
+    return gdf_NUTS_local
 
 
 
@@ -37,6 +96,8 @@ def load_gdf_nuts_and_local(file_gdf_NUTS, region):
     )
 
     gdf_NUTS_local = gdf_NUTS.loc[[region]]
+    if region == 'ES':
+        gdf_NUTS_local = _subtract_excluded_geometries(gdf_NUTS_local, gdf_NUTS)
 
     return gdf_NUTS, gdf_NUTS_local
 

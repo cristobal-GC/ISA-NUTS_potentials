@@ -28,26 +28,29 @@ ISAS = [0, 1, 2, 3, 4]
 
 
 # This function infers NUTS level from explicit region patterns:
+# NUTS0: AB   (A,B uppercase letters only, e.g. 'ES')
 # NUTS2: ABxy (A,B uppercase letters; x,y digits)
 # NUTS3: ABxyz (A,B uppercase letters; x,y,z digits)
 def infer_nuts_level(region):
+    if re.fullmatch(r"[A-Z]{2}", region):
+        return "NUTS0"
     if re.fullmatch(r"[A-Z]{2}\d{2}", region):
         return "NUTS2"
     if re.fullmatch(r"[A-Z]{2}\d{3}", region):
         return "NUTS3"
     raise ValueError(
-        f"Invalid region code '{region}'. Expected NUTS2 pattern ABxy or NUTS3 pattern ABxyz."
+        f"Invalid region code '{region}'. Expected NUTS0 pattern AB, NUTS2 pattern ABxy or NUTS3 pattern ABxyz."
     )
 
 
 
-# This generates REGION_NUTS_PAIRS = [(NUTS2, region1), (NUTS2, region2), ..., (NUTS3, regionX), ...]
+# This generates REGION_NUTS_PAIRS = [(NUTS0, region0), (NUTS2, region1), (NUTS2, region2), ..., (NUTS3, regionX), ...]
 if isinstance(REGIONS_CFG, dict):
-    VALID_NUTS_KEYS = {"NUTS2", "NUTS3"}
+    VALID_NUTS_KEYS = {"NUTS0", "NUTS2", "NUTS3"}
     invalid_keys = [key for key in REGIONS_CFG if key not in VALID_NUTS_KEYS]
     if invalid_keys:
         raise ValueError(
-            f"Invalid regions keys {invalid_keys}. Expected only 'NUTS2' and/or 'NUTS3'."
+            f"Invalid regions keys {invalid_keys}. Expected only 'NUTS0', 'NUTS2' and/or 'NUTS3'."
         )
 
     REGION_NUTS_PAIRS = [
@@ -67,7 +70,7 @@ else:
 
 if not REGION_NUTS_PAIRS:
     raise ValueError(
-        "No regions configured. Define regions in config/config.yaml as a list or under regions.NUTS2/NUTS3."
+        "No regions configured. Define regions in config/config.yaml as a list or under regions.NUTS0/NUTS2/NUTS3."
     )
 
 

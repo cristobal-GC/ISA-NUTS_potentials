@@ -33,8 +33,8 @@ labels = fig_params["ISA"]["labels"]
 
 ############################## Create plot
 
-size = fig_params["CF_CAPACITY"]["size"]
-fontsize = fig_params["CF_CAPACITY"]["fontsize"]
+size = fig_params["sizes"]["LR"]["size"]
+fontsize = fig_params["sizes"]["LR"]["fontsize"]
 
 fig, ax = plt.subplots(figsize=(size, size))
 

@@ -1,9 +1,11 @@
 
 ########## WILDCARDS
 regions:
+  NUTS0:
+  #- ES
   NUTS2:
   - ES11
-  - ES41
+  - ES12  
   NUTS3: []
   #- ES111
   #- ES112
@@ -38,9 +40,9 @@ years:
 
 cutout_params:
   era5_2023:
-    path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2023-sarah3-era5.nc"
+    path: "~/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2023-sarah3-era5.nc"
   ibera5_2023:
-    path: "/home/aerolinux4/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/iberia-2023-era5.nc"
+    path: "~/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/iberia-2023-era5.nc"
 
 CF_params:
   onwind:
@@ -55,8 +57,6 @@ CF_params:
       azimuth: 180.0
     correction_factor: 0.85
     cap_per_sqkm: 50
-
-
 
 fig_params:
   sizes:
@@ -78,6 +78,12 @@ fig_params:
   CF:
     onwind:
       cmap: BuPu
+      vmin: 0
+      vmax: 1
+    solar:
+      cmap: BuPu
+      vmin: 0
+      vmax: 1
   CAPACITY:
     onwind:
       cmap: YlGn
@@ -85,9 +91,6 @@ fig_params:
     solar:
       cmap: YlGn
       units: MW
-  CF_CAPACITY:
-    size: 12
-    fontsize: 16
   ISA:
     colors:
       0: "#d73027"

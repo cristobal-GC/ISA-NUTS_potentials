@@ -1,5 +1,5 @@
 import cartopy.crs as ccrs
-from utils import load_and_limit_cutout, load_gdf_nuts_and_local, plot_dataarray_on_map
+from utils import load_and_limit_cutout, load_gdf_nuts_and_local, plot_dataarray_on_map, resolve_user_home_path
 
 import matplotlib
 matplotlib.use('Agg')  # This enables backend without GUI (there seems to be problems with projection, PlateCarree)
@@ -34,7 +34,7 @@ gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)
 
 
 ##### Load and limit cutout
-file_cutout = cutout_params[f"{cutout}_{year}"]["path"]
+file_cutout = resolve_user_home_path(cutout_params[f"{cutout}_{year}"]["path"])
 c = load_and_limit_cutout(file_cutout, gdf_NUTS_local)
 
 
