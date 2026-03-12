@@ -12,19 +12,12 @@ def _log_and_print(message):
     print(message)
 
 
-# NUTS_IDs whose geometries are excluded from their parent region.
-# Currently: Canary Islands (ES7), Ceuta (ES63), Melilla (ES64).
-_EXCLUDED_NUTS_GEOMETRY = ['ES7', 'ES63', 'ES64']
-
-
 def _subtract_excluded_geometries(gdf_local, gdf_all):
     """
-    Subtract excluded sub-regional geometries from gdf_local.
+    Rebuild ES geometry by intersecting with Spanish NUTS1 union excluding ES7.
 
-    Some NUTS_IDs (e.g. islands or exclaves defined in _EXCLUDED_NUTS_GEOMETRY)
-    are removed from the geometry of gdf_local when they are sub-regions of the
-    requested region (i.e. their NUTS_ID exists in gdf_all and their geometry
-    overlaps with gdf_local).
+    This is used to remove non-mainland/islet artifacts that are not fully handled
+    by subtracting a fixed set of excluded sub-regions.
 
     Parameters
     ----------
@@ -37,21 +30,31 @@ def _subtract_excluded_geometries(gdf_local, gdf_all):
     Returns
     -------
     geopandas.GeoDataFrame
-        gdf_local with the excluded geometries subtracted.
+        gdf_local with ES geometry intersected with NUTS1 union (excluding ES7).
     """
     from shapely.ops import unary_union
 
-    ids_to_exclude = [nid for nid in _EXCLUDED_NUTS_GEOMETRY if nid in gdf_all.index]
-    if not ids_to_exclude:
+    # Apply only when the requested local geometry corresponds to ES.
+    if "ES" not in gdf_local.index:
         return gdf_local
 
-    exclude_geom = unary_union(gdf_all.loc[ids_to_exclude].geometry)
+    # Spanish NUTS1 IDs are of the form ES[0-9] (e.g. ES1 ... ES7).
+    # Excluding ES7 (Canarias) keeps mainland + remaining continental subregions.
+    ids_to_keep = [
+        nid
+        for nid in gdf_all.index.astype(str)
+        if nid.startswith("ES") and len(nid) == 3 and nid[2].isdigit() and nid != "ES7"
+    ]
+    if not ids_to_keep:
+        return gdf_local
+
+    keep_geom = unary_union(gdf_all.loc[ids_to_keep].geometry)
 
     gdf_local = gdf_local.copy()
-    gdf_local["geometry"] = gdf_local.geometry.difference(exclude_geom)
+    gdf_local["geometry"] = gdf_local.geometry.intersection(keep_geom)
 
     _log_and_print(
-        f"[_subtract_excluded_geometries] Subtracted geometries for: {ids_to_exclude}"
+        f"[_subtract_excluded_geometries] Intersected ES with NUTS1 excluding ES7: {ids_to_keep}"
     )
 
     return gdf_local
