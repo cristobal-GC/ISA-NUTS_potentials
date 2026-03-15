@@ -5,7 +5,7 @@ import rasterio
 from atlite.gis import ExclusionContainer
 from utils import (
     load_and_limit_cutout,
-    load_gdf_nuts_local,
+    load_gdf_nuts,
     resolve_user_home_path,
     log_raster_spatial_info,
     log_xarray_spatial_info,
@@ -144,7 +144,7 @@ resource = snakemake.wildcards["resource"]
 ############################## Operations
 
 ##### Load gdf_NUTS_local
-gdf_NUTS_local = load_gdf_nuts_local(file_gdf_NUTS, region)
+_, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
 
 
 ##### Load and limit cutout

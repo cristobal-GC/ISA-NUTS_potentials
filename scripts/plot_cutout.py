@@ -1,5 +1,5 @@
 import cartopy.crs as ccrs
-from utils import load_and_limit_cutout, load_gdf_nuts_and_local, plot_dataarray_on_map, resolve_user_home_path
+from utils import load_and_limit_cutout, load_gdf_nuts, plot_dataarray_on_map, resolve_user_home_path
 
 import matplotlib
 matplotlib.use('Agg')  # This enables backend without GUI (there seems to be problems with projection, PlateCarree)
@@ -30,7 +30,7 @@ resource = snakemake.wildcards["resource"]
 ############################## Operations
 
 ##### Load gdf_NUTS and gdf_NUTS_local
-gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)
+gdf_NUTS, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
 
 
 ##### Load and limit cutout

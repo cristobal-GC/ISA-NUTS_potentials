@@ -1,7 +1,7 @@
 import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-from utils import load_gdf_nuts_and_local, plot_dataarray_on_map, log_xarray_spatial_info
+from utils import load_gdf_nuts, plot_dataarray_on_map, log_xarray_spatial_info
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -34,7 +34,7 @@ CAPACITY = xr.open_dataarray(file_nc_CAPACITY)
 log_xarray_spatial_info(CAPACITY, source_label=file_nc_CAPACITY)
 
 ##### Load gdf_NUTS
-gdf_NUTS, gdf_NUTS_local = load_gdf_nuts_and_local(file_gdf_NUTS, region)
+gdf_NUTS, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
 
 
 ############################## Create outputs

@@ -166,37 +166,32 @@ def resolve_user_home_path(path_value):
 
 
 
-def load_gdf_nuts_local(file_gdf_NUTS, region):
+def load_gdf_nuts(file_gdf_NUTS, region):
+    
+    ##### Load full gdf_NUTS and select local region
     gdf_NUTS = (
         gpd.read_file(file_gdf_NUTS)
         .set_index("NUTS_ID")
     )
 
     _log_and_print(
-        f"[load_gdf_nuts_local] Loaded gdf_NUTS for region: {region}, CRS: {gdf_NUTS.crs}"
+        f"[load_gdf_nuts] Loaded gdf_NUTS, CRS: {gdf_NUTS.crs}"
     )
 
+    ##### Filter local region. 
     gdf_NUTS_local = gdf_NUTS.loc[[region]]
-    if region == 'ES':
-        gdf_NUTS_local = _subtract_excluded_geometries(gdf_NUTS_local, gdf_NUTS)
-
-    return gdf_NUTS_local
-
-
-
-def load_gdf_nuts_and_local(file_gdf_NUTS, region):
-    gdf_NUTS = (
-        gpd.read_file(file_gdf_NUTS)
-        .set_index("NUTS_ID")
-    )
-
+    
     _log_and_print(
-        f"[load_gdf_nuts_and_local] Loaded gdf_NUTS for region: {region}, CRS: {gdf_NUTS.crs}"
+        f"[load_gdf_nuts] Filtered local region: {region}"
     )
 
-    gdf_NUTS_local = gdf_NUTS.loc[[region]]
+    # For ES, also apply the geometry subtraction to remove non-mainland/islet artifacts.
     if region == 'ES':
         gdf_NUTS_local = _subtract_excluded_geometries(gdf_NUTS_local, gdf_NUTS)
+        # Log
+        _log_and_print(
+            f"[load_gdf_nuts] Applied geometry subtraction for ES to remove non-mainland/islet artifacts."
+        )
 
     return gdf_NUTS, gdf_NUTS_local
 
