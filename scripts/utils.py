@@ -94,18 +94,102 @@ def log_xarray_spatial_info(data, source_label):
         )
 
 
+
 def log_raster_spatial_info(raster, source_label):
-    if raster.crs is not None and raster.crs.is_geographic:
-        x_name, y_name = "lon", "lat"
-    else:
+    """
+    Log spatial metadata of a raster dataset.
+
+    Parameters
+    ----------
+    raster : rasterio.DatasetReader
+        Open raster dataset
+    source_label : str
+        Identifier of the raster source (e.g., filepath)
+    """
+
+    crs = raster.crs
+
+    # Determine CRS type and coordinate naming
+    if crs is None:
+        crs_type = "undefined"
         x_name, y_name = "x", "y"
+        units = "unknown"
 
+    elif crs.is_geographic:
+        crs_type = "geographic"
+        x_name, y_name = "longitude", "latitude"
+        units = "degrees"
+
+    else:
+        crs_type = "projected"
+        x_name, y_name = "easting", "northing"
+        units = "meters"
+
+    # Basic spatial info
     left, bottom, right, top = raster.bounds
+    resx, resy = raster.res
+    transform = raster.transform
 
-    _log_and_print(f"[spatial-log] source={source_label} | type=raster | crs={raster.crs}")
-    _log_and_print(f"[spatial-log] source={source_label} | spatial_dims={[x_name, y_name]}")
-    _log_and_print(f"[spatial-log] source={source_label} | dim={x_name} | n={raster.width} | min={left} | max={right}")
-    _log_and_print(f"[spatial-log] source={source_label} | dim={y_name} | n={raster.height} | min={bottom} | max={top}")
+    _log_and_print(
+        f"[spatial-log] source={source_label} | type=raster | crs={crs} | crs_type={crs_type}"
+    )
+
+    _log_and_print(
+        f"[spatial-log] source={source_label} | spatial_dims={[x_name, y_name]} | units={units}"
+    )
+
+    _log_and_print(
+        f"[spatial-log] source={source_label} | dim={x_name} | n={raster.width} | "
+        f"min={left} | max={right} | res={resx}"
+    )
+
+    _log_and_print(
+        f"[spatial-log] source={source_label} | dim={y_name} | n={raster.height} | "
+        f"min={bottom} | max={top} | res={resy}"
+    )
+
+    _log_and_print(
+        f"[spatial-log] source={source_label} | transform={transform}"
+    )
+
+    # Optional extra metadata
+    _log_and_print(
+        f"[spatial-log] source={source_label} | dtype={raster.dtypes[0]} | nodata={raster.nodata}"
+    )
+
+    # ----------------------------
+    # Simple sanity checks
+    # ----------------------------
+
+    # Check resolution sign (north-up rasters normally have negative y resolution)
+    if resy > 0:
+        _log_and_print(
+            f"[spatial-log-warning] source={source_label} | positive y resolution (unexpected orientation)"
+        )
+
+    # Check geographic bounds plausibility
+    if crs and crs.is_geographic:
+        if not (-180 <= left <= 180 and -180 <= right <= 180):
+            _log_and_print(
+                f"[spatial-log-warning] source={source_label} | longitude bounds outside [-180,180]"
+            )
+
+        if not (-90 <= bottom <= 90 and -90 <= top <= 90):
+            _log_and_print(
+                f"[spatial-log-warning] source={source_label} | latitude bounds outside [-90,90]"
+            )
+
+    # Check for very large or very small pixel sizes
+    if abs(resx) > 10000 or abs(resy) > 10000:
+        _log_and_print(
+            f"[spatial-log-warning] source={source_label} | unusually large pixel size"
+        )
+
+    if abs(resx) < 1e-6 or abs(resy) < 1e-6:
+        _log_and_print(
+            f"[spatial-log-warning] source={source_label} | unusually small pixel size"
+        )
+
 
 
 def _subtract_excluded_geometries(gdf_local, gdf_all):

@@ -1,21 +1,24 @@
 import pandas as pd
 import numpy as np
 import rasterio
-from rasterio.warp import calculate_default_transform
 from utils import log_raster_spatial_info
 
 from typing import Any
-snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
+snakemake: Any
 
+
+
+##############################
+# This script reads the ISA raster for a given region, counts the number of pixels in each class (0-4), computes the area and percentage for each class, and saves the results in a dataframe as a CSV file. The script also adds a TOTAL row with the sum of counts, area, and percentage.
+#
+# The area is computed using the pixel resolution from the raster metadata
 
 
 ############################## Unwrap relevant variables
 
-##### input
 file_raster_ISA = snakemake.input["raster_ISA"]
-##### output
 file_df_ISA = snakemake.output["df_ISA"]
-##### wildcards
+
 region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
 
@@ -23,86 +26,69 @@ resource = snakemake.wildcards["resource"]
 
 ############################## Operations
 
-# NOTE: The ISA raster is in EPSG:25830 (ETRS89 / UTM zone 30N), which is NOT an equal-area projection.
-# In UTM, area distortion increases with distance from the central meridian, so pixels don't have uniform area.
-# To calculate accurate areas, we need to use the actual pixel area in an equal-area CRS (EPSG:3035 - LAEA Europe),
-# which is the same projection used in get_nc_CAPACITY.py for consistency in area calculations.
-
-def calculate_pixel_area_in_equal_area_crs(raster, target_crs='EPSG:3035'):
-    """
-    Calculate the area of a pixel in square kilometers after reprojecting to an equal-area CRS.
-    
-    Parameters
-    ----------
-    raster : rasterio.DatasetReader
-        Open raster dataset
-    target_crs : str
-        Target equal-area CRS (default: EPSG:3035 - LAEA Europe)
-    
-    Returns
-    -------
-    float
-        Pixel area in km²
-    """
-    # Get transform and dimensions for reprojection
-    transform, width, height = calculate_default_transform(
-        raster.crs, 
-        target_crs,
-        raster.width,
-        raster.height,
-        *raster.bounds
-    )
-    
-    # Calculate pixel area from transform (in m²)
-    pixel_area_m2 = abs(transform.a * transform.e)
-    
-    # Convert to km²
-    pixel_area_km2 = pixel_area_m2 * 1e-6
-    
-    return pixel_area_km2
-
-
-##### Load raster_ISA and process
 with rasterio.open(file_raster_ISA) as raster_ISA:
+
     log_raster_spatial_info(raster_ISA, source_label=file_raster_ISA)
 
-    ##### Get ISA band
     band = raster_ISA.read(1)
-    
-    ##### Calculate pixel area in equal-area projection (km²)
-    pixel_area_km2 = calculate_pixel_area_in_equal_area_crs(raster_ISA)
 
-##### Get areas and percentages of each ISA code
-# Unique values and counts
-unique, counts = np.unique(band, return_counts=True)
-df = pd.DataFrame({'value': unique, 'counts': counts})
-# Remove 65535
-df = df[df['value'] != 65535]
-# Make it sure all levels 0-4 exist
-all_values = pd.DataFrame({'value': np.arange(5)})
-df = all_values.merge(df, on='value', how='left').fillna(0)
-# Assign area using actual pixel area in equal-area projection
-df['area'] = df['counts'] * pixel_area_km2
-# Assign percentage
-df['porc'] = 100*df['counts'].div(df['counts'].sum())
+    ##### Pixel area (km²)
+    pixel_width, pixel_height = raster_ISA.res
+    pixel_area_km2 = abs(pixel_width * pixel_height) * 1e-6
+
+    ##### Remove nodata
+    nodata = raster_ISA.nodata
+    if nodata is not None:
+        band = band[band != nodata] # 65535
+
+
+
+##### Count pixels per class (fast)
+
+# flatten array for bincount
+band_flat = band.ravel()
+
+# ensure at least classes 0–4 exist
+# bitcount is more efficienty than np.unique for counting occurrences of integer values, but it requires the input to be non-negative integers and will count all integers up to the maximum value in the input. By using minlength=5, we ensure that we get counts for classes 0–4 even if some of them are not present in the data, and we ignore any values above 4.
+counts = np.bincount(band_flat, minlength=5)
+
+# keep only 0-4
+counts = counts[:5]
+
+
+
+##### Build dataframe
+
+df = pd.DataFrame({
+    "value": np.arange(5),
+    "counts": counts
+})
+
+
+##### Compute areas and percentages
+
+df["area"] = df["counts"] * pixel_area_km2
+df["porc"] = 100 * df["counts"] / df["counts"].sum()
+
+
 
 ##### Add TOTAL row
-# Compute sum of all numeric columns
-totals = df.drop(columns=['value']).sum(numeric_only=True)
-# Add row with totals
-row_total = pd.DataFrame({**{'value': 'TOTAL'}, **totals.to_dict()}, index=[0])
-# Add at the end
-df = pd.concat([df, row_total], ignore_index=True)
-# Round
-df = df.round({'area': 6, 'porc': 6})
 
-##### Set index: 'value'
-df.set_index('value', inplace=True)
+totals = df.drop(columns=["value"]).sum(numeric_only=True)
+
+row_total = pd.DataFrame(
+    {**{"value": "TOTAL"}, **totals.to_dict()},
+    index=[0]
+)
+
+df = pd.concat([df, row_total], ignore_index=True)
+
+df = df.round({"area": 6, "porc": 6})
+
+df.set_index("value", inplace=True)
 
 
 
 ############################## Create outputs
+
 df.to_csv(file_df_ISA)
-
-
-

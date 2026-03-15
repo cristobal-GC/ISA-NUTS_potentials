@@ -7,6 +7,11 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 
 
 
+##############################
+# This script reads the ISA raster for the Iberian peninsula and resource (solar/wind), applies a vectorial mask using the NUTS geometry to extract only the relevant NUTS region, and saves the masked raster as a new file. The script also logs spatial information of the input and output rasters for verification.
+
+
+
 ############################## Unwrap relevant variables
 
 ##### input
@@ -36,7 +41,7 @@ with rasterio.open(file_raster_ISA_miteco) as raster_ISA_miteco:
     gdf_NUTS_local = gdf_NUTS_local.to_crs(raster_ISA_miteco.crs)
 
     _log_and_print(
-        f"[get_raster_ISA] Reprojected gdf_NUTS_local geometry to source raster CRS: {raster_ISA_miteco.crs}."
+        f"[get_raster_ISA] Reprojected gdf_NUTS_local (CRS: {gdf_NUTS_local.crs}) to source raster (CRS: {raster_ISA_miteco.crs})."
     )
 
     # Prepare geometry for masking
