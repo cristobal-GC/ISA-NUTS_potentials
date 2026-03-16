@@ -4,6 +4,8 @@ import logging
 import numpy as np
 from pathlib import Path
 import xarray as xr
+from pyproj import CRS
+
 
 
 logger = logging.getLogger(__name__)
@@ -15,83 +17,192 @@ def _log_and_print(message):
 
 
 def _select_spatial_dims_xarray(data):
-    known_x = {"x", "lon", "longitude", "easting", "eastings"}
-    known_y = {"y", "lat", "latitude", "northing", "northings"}
+    """
+    Identify spatial dimensions in an xarray Dataset/DataArray.
+    Returns two dimensions (x, y) if possible.
+    """
 
     dims = list(data.dims)
-    selected = []
-    for dim in dims:
-        dim_lower = dim.lower()
-        if dim_lower in known_x or dim_lower in known_y:
-            selected.append(dim)
 
-    if len(selected) < 2:
-        for coord_name in data.coords:
-            coord = data.coords[coord_name]
-            axis = str(coord.attrs.get("axis", "")).upper()
-            if axis in {"X", "Y"} and coord_name in dims and coord_name not in selected:
-                selected.append(coord_name)
+    # 1. Prefer standard geographic names
+    x_candidates = {"x", "lon", "longitude", "easting"}
+    y_candidates = {"y", "lat", "latitude", "northing"}
 
-    if len(selected) < 2:
-        non_spatial_guess_exclude = {"time", "month", "year", "step", "band", "variable"}
-        for dim in dims:
-            if dim.lower() not in non_spatial_guess_exclude and dim not in selected:
-                selected.append(dim)
-            if len(selected) >= 2:
-                break
+    x_dim = next((d for d in dims if d.lower() in x_candidates), None)
+    y_dim = next((d for d in dims if d.lower() in y_candidates), None)
 
-    if len(selected) < 2:
-        for dim in dims:
-            if dim not in selected:
-                selected.append(dim)
-            if len(selected) >= 2:
-                break
+    if x_dim and y_dim:
+        return [x_dim, y_dim]
 
-    return selected[:2]
+    # 2. CF axis attribute
+    for coord_name in data.coords:
+        coord = data.coords[coord_name]
+        axis = str(coord.attrs.get("axis", "")).upper()
+
+        if axis == "X" and coord_name in dims:
+            x_dim = coord_name
+        if axis == "Y" and coord_name in dims:
+            y_dim = coord_name
+
+    if x_dim and y_dim:
+        return [x_dim, y_dim]
+
+    # 3. Fallback: ignore clearly non-spatial dimensions
+    exclude = {"time", "month", "year", "step", "band", "variable"}
+
+    spatial_guess = [d for d in dims if d.lower() not in exclude]
+
+    if len(spatial_guess) >= 2:
+        return spatial_guess[:2]
+
+    # 4. Last resort
+    return dims[:2]
+
 
 
 def _extract_xarray_crs(data):
-    for key in ["crs", "spatial_ref"]:
-        if key in data.attrs:
-            return data.attrs[key]
+    """
+    Extract CRS from xarray Dataset/DataArray and return a pyproj.CRS object.
+    """
+    crs_keys = ["crs", "spatial_ref", "crs_wkt", "proj4_params", "epsg"]
 
-    grid_mapping_name = data.attrs.get("grid_mapping")
-    if grid_mapping_name and grid_mapping_name in data.coords:
-        coord = data.coords[grid_mapping_name]
-        for key in ["spatial_ref", "crs_wkt", "proj4_params", "crs"]:
-            if key in coord.attrs:
-                return coord.attrs[key]
+    def _try_crs_from_attrs(attrs):
+        if not attrs:
+            return None
 
-    return "unknown"
+        for key in crs_keys:
+            if key not in attrs:
+                continue
+
+            value = attrs[key]
+            if value is None or value == "":
+                continue
+
+            try:
+                if key == "epsg":
+                    return CRS.from_epsg(int(value))
+                return CRS.from_user_input(value)
+            except Exception:
+                continue
+
+        return None
+
+    def _get_named_mapping_variable(mapping_name):
+        if mapping_name in data.coords:
+            return data.coords[mapping_name]
+        if isinstance(data, xr.Dataset) and mapping_name in data.data_vars:
+            return data[mapping_name]
+        return None
+
+    crs = _try_crs_from_attrs(getattr(data, "attrs", {}))
+    if crs is not None:
+        return crs
+
+    grid_mapping_name = getattr(data, "attrs", {}).get("grid_mapping")
+    if grid_mapping_name:
+        mapping_var = _get_named_mapping_variable(grid_mapping_name)
+        if mapping_var is not None:
+            crs = _try_crs_from_attrs(getattr(mapping_var, "attrs", {}))
+            if crs is not None:
+                return crs
+
+    if isinstance(data, xr.Dataset):
+        for var in data.data_vars.values():
+            crs = _try_crs_from_attrs(getattr(var, "attrs", {}))
+            if crs is not None:
+                return crs
+
+            grid_mapping_name = var.attrs.get("grid_mapping")
+            if not grid_mapping_name:
+                continue
+
+            mapping_var = _get_named_mapping_variable(grid_mapping_name)
+            if mapping_var is None:
+                continue
+
+            crs = _try_crs_from_attrs(getattr(mapping_var, "attrs", {}))
+            if crs is not None:
+                return crs
+
+    for coord in data.coords.values():
+        crs = _try_crs_from_attrs(getattr(coord, "attrs", {}))
+        if crs is not None:
+            return crs
+
+    return None
+
 
 
 def log_xarray_spatial_info(data, source_label):
+    """
+    Log spatial metadata of an xarray Dataset or DataArray.
+    """
+
     spatial_dims = _select_spatial_dims_xarray(data)
     crs = _extract_xarray_crs(data)
 
-    details = []
+    # ----------------------------
+    # Determine CRS type
+    # ----------------------------
+    if crs is None:
+        crs_type = "undefined"
+        units = "unknown"
+    elif crs.is_geographic:
+        crs_type = "geographic"
+        units = "degrees"
+    else:
+        crs_type = "projected"
+        units = "meters"
+
+    _log_and_print(
+        f"[spatial-log] source={source_label} | type=xarray | crs={crs} | crs_type={crs_type}"
+    )
+
+    _log_and_print(
+        f"[spatial-log] source={source_label} | spatial_dims={spatial_dims} | units={units}"
+    )
+
+    # ----------------------------
+    # Dimension info
+    # ----------------------------
     for dim in spatial_dims:
+
         n_values = int(data.sizes[dim]) if dim in data.sizes else None
+        dim_min = "unknown"
+        dim_max = "unknown"
+        res = "unknown"
+
         if dim in data.coords:
-            coord_values = data.coords[dim].values
-            if coord_values.size > 0 and np.issubdtype(np.asarray(coord_values).dtype, np.number):
-                dim_min = float(np.nanmin(coord_values))
-                dim_max = float(np.nanmax(coord_values))
-            else:
-                dim_min = "unknown"
-                dim_max = "unknown"
-        else:
-            dim_min = "unknown"
-            dim_max = "unknown"
 
-        details.append((dim, n_values, dim_min, dim_max))
+            coord = data.coords[dim].values
 
-    _log_and_print(f"[spatial-log] source={source_label} | type=xarray | crs={crs}")
-    _log_and_print(f"[spatial-log] source={source_label} | spatial_dims={[dim for dim, _, _, _ in details]}")
-    for dim, n_values, dim_min, dim_max in details:
+            if coord.size > 0 and np.issubdtype(np.asarray(coord).dtype, np.number):
+
+                dim_min = float(np.nanmin(coord))
+                dim_max = float(np.nanmax(coord))
+
+                if coord.size > 1:
+                    res = float(np.nanmedian(np.diff(coord)))
+
+
+        # Format resolution for logging (it could be "unknown")
+        res_str = f"{res:.2f}" if isinstance(res, float) else res
+
         _log_and_print(
-            f"[spatial-log] source={source_label} | dim={dim} | n={n_values} | min={dim_min} | max={dim_max}"
+            f"[spatial-log] source={source_label} | dim={dim} | n={n_values} | "
+            f"min={dim_min} | max={dim_max} | res={res_str}"
         )
+
+    # ----------------------------
+    # dtype
+    # ----------------------------
+    try:
+        dtype = str(data.dtype)
+        _log_and_print(
+            f"[spatial-log] source={source_label} | dtype={dtype}"
+        )
+    except AttributeError:
+        pass
 
 
 
@@ -240,6 +351,7 @@ def _subtract_excluded_geometries(gdf_local, gdf_all):
     return gdf_local
 
 
+
 def resolve_user_home_path(path_value):
     path = Path(path_value).expanduser()
 
@@ -259,7 +371,7 @@ def load_gdf_nuts(file_gdf_NUTS, region):
     )
 
     _log_and_print(
-        f"[load_gdf_nuts] Loaded gdf_NUTS, CRS: {gdf_NUTS.crs}"
+        f"[load_gdf_nuts] gdf_NUTS loaded gdf_NUTS. CRS: {gdf_NUTS.crs}"
     )
 
     ##### Filter local region. 
@@ -283,17 +395,20 @@ def load_gdf_nuts(file_gdf_NUTS, region):
 
 def load_and_limit_cutout(file_cutout, gdf_local):
 
+    """This function loads the cutout and limits it to the bounding box of the local region. It also checks and handles CRS mismatches between the cutout and the local region geometry."""
+
+    ##### Load cutout
     c = atlite.Cutout(file_cutout)
 
-    log_xarray_spatial_info(c.data, source_label=f"cutout:{file_cutout}")
-
     _log_and_print(
-        f"[load_and_limit_cutout] Cutout loaded. CRS is {c.crs}."
+        f"[load_and_limit_cutout] Cutout loaded. CRS: {c.crs}."
     )
+
+    log_xarray_spatial_info(c.data, source_label=f"cutout:{file_cutout}")    
 
 
     if gdf_local.crs is None:
-        raise ValueError("gdf_local must have a defined CRS.")
+        raise ValueError("[load_and_limit_cutout] gdf_local must have a defined CRS.")
 
 
     if gdf_local.crs != c.crs:
@@ -302,8 +417,7 @@ def load_and_limit_cutout(file_cutout, gdf_local):
             f"[load_and_limit_cutout] Mismatch between gdf_local CRS({gdf_local.crs}) and cutout CRS ({c.crs}). Reprojecting gdf_local to cutout CRS."
         )
 
-        gdf_local = gdf_local.to_crs(c.crs)
-     
+        gdf_local = gdf_local.to_crs(c.crs)     
         
 
     xmin, ymin, xmax, ymax = gdf_local.total_bounds
@@ -416,12 +530,12 @@ def plot_dataarray_on_map(
     cbar.ax.tick_params(labelsize=fontsize)
     
     ##### Add NUTS boundaries
-    # All NUTS at same level as region
-    gdf_NUTS[gdf_NUTS.index.astype(str).str.len() == len(region)].plot(
+    # Add gdf for regions with the same NUTS code with thin grey lines
+    gdf_NUTS[gdf_NUTS['LEVL_CODE'] == gdf_NUTS_local['LEVL_CODE'].iloc[0]].plot(
         ax=ax, color="none", edgecolor='grey', linewidth=linewidth
     )
     
-    # Local region with double linewidth
+    # Add gdf_local with double linewidth
     gdf_NUTS_local.plot(
         ax=ax, color="none", edgecolor='black', linewidth=linewidth*2
     )
@@ -430,8 +544,9 @@ def plot_dataarray_on_map(
     if bounds_type == "gdf":
         # Use GDF bounds (for geographic coordinates)
         xmin, ymin, xmax, ymax = gdf_NUTS_local.total_bounds
-        km_per_lon = 85
+        center_lat = (ymax + ymin) / 2
         km_per_lat = 111
+        km_per_lon = 111 * np.cos(np.deg2rad(center_lat))
         center_x = (xmax + xmin) / 2
         center_y = (ymax + ymin) / 2
         delta_x = xmax - xmin

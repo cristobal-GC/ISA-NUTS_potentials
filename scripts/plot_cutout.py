@@ -10,6 +10,11 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 
 
 
+##############################
+# This script reads the cutout for a given region and resource, limits it to the region, computes the mean field over time, and plots it on a map with the NUTS boundaries.
+
+
+
 ############################## Unwrap relevant variables
 
 ##### params
@@ -44,7 +49,7 @@ if resource == 'onwind':
 elif resource == 'solar':
     field = c.data.influx_direct.mean(dim='time') + c.data.influx_diffuse.mean(dim='time')
 else: 
-    raise ValueError(f"resource must be 'onwind' or 'solar', but received: {resource}")
+    raise ValueError(f"[plot_cutout] resource must be 'onwind' or 'solar', but received: {resource}")
 
 
 

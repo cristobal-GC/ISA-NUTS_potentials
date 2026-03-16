@@ -119,10 +119,10 @@ center_y = (ymax + ymin) / 2
 delta_x = xmax - xmin
 delta_y = ymax - ymin
 
-pad = 0.02
+margin = 0.02
 
-ax.set_xlim(xmin - pad*delta_x, xmax + pad*delta_x)
-ax.set_ylim(ymin - pad*delta_y, ymax + pad*delta_y)
+ax.set_xlim(xmin - margin*delta_x, xmax + margin*delta_x)
+ax.set_ylim(ymin - margin*delta_y, ymax + margin*delta_y)
 
 ax.set_xticks([])
 ax.set_yticks([])
