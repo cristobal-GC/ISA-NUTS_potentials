@@ -14,7 +14,7 @@ rule plot_ISA:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Plotting ISA map for resource: {wildcards.resource}, region: {wildcards.region}, resolution: {wildcards.resolution} format: {wildcards.format}."
+        "... [plot_ISA] Plotting ISA map for resource: {wildcards.resource}, region: {wildcards.region}, resolution: {wildcards.resolution} format: {wildcards.format}."
     params:
         fig_params=config["fig_params"]
     input:
@@ -42,7 +42,7 @@ rule plot_cutout:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Plotting cutout map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
+        "... [plot_cutout] Plotting cutout map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:
         cutout_params=config["cutout_params"],
         fig_params=config["fig_params"]
@@ -75,7 +75,7 @@ rule plot_CF:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Plotting CF map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
+        "... [plot_CF] Plotting CF map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:
         fig_params=config["fig_params"]
     input:
@@ -97,7 +97,7 @@ rule plot_CF:
 
 
 
-#################### plot_CAPACITY_CF_ISA
+#################### plot_CAPACITY
 #
 # Wildcards:
 #   - cutout     [era5, ...]
@@ -108,13 +108,13 @@ rule plot_CF:
 #   - year       [2013, ...]
 #   - format     [png, pdf]
 
-rule plot_CAPACITY_CF_ISA:
+rule plot_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
         resource="onwind|solar",
         filters=r"CFth|ISA\d+|CFth_ISA\d+",
     message:
-        "... Plotting CAPACITY map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, filters: {wildcards.filters}, format: {wildcards.format}."
+        "... [plot_CAPACITY] Plotting CAPACITY map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, filters: {wildcards.filters}, format: {wildcards.format}."
     params:
         fig_params=config["fig_params"]
     input:
@@ -141,7 +141,7 @@ rule plot_df_CF_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Plotting CF vs CUM_CAPACITY curves for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
+        "... [plot_df_CF_CAPACITY] Plotting CF vs CUM_CAPACITY curves for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:
         fig_params=config["fig_params"]
     input:

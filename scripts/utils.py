@@ -138,6 +138,9 @@ def log_xarray_spatial_info(data, source_label):
     Log spatial metadata of an xarray Dataset or DataArray.
     """
 
+    _log_and_print('[log_xarray_spatial_info] Extracting spatial metadata:')
+
+
     spatial_dims = _select_spatial_dims_xarray(data)
     crs = _extract_xarray_crs(data)
 
@@ -155,11 +158,11 @@ def log_xarray_spatial_info(data, source_label):
         units = "meters"
 
     _log_and_print(
-        f"[spatial-log] source={source_label} | type=xarray | crs={crs} | crs_type={crs_type}"
+        f"[log_xarray_spatial_info] source={source_label} | type=xarray | crs={crs} | crs_type={crs_type}"
     )
 
     _log_and_print(
-        f"[spatial-log] source={source_label} | spatial_dims={spatial_dims} | units={units}"
+        f"[log_xarray_spatial_info] source={source_label} | spatial_dims={spatial_dims} | units={units}"
     )
 
     # ----------------------------
@@ -189,7 +192,7 @@ def log_xarray_spatial_info(data, source_label):
         res_str = f"{res:.2f}" if isinstance(res, float) else res
 
         _log_and_print(
-            f"[spatial-log] source={source_label} | dim={dim} | n={n_values} | "
+            f"[log_xarray_spatial_info] source={source_label} | dim={dim} | n={n_values} | "
             f"min={dim_min} | max={dim_max} | res={res_str}"
         )
 
@@ -199,7 +202,7 @@ def log_xarray_spatial_info(data, source_label):
     try:
         dtype = str(data.dtype)
         _log_and_print(
-            f"[spatial-log] source={source_label} | dtype={dtype}"
+            f"[log_xarray_spatial_info] source={source_label} | dtype={dtype}"
         )
     except AttributeError:
         pass
@@ -217,6 +220,10 @@ def log_raster_spatial_info(raster, source_label):
     source_label : str
         Identifier of the raster source (e.g., filepath)
     """
+
+
+    _log_and_print('[log_raster_spatial_info] Extracting spatial metadata:')
+
 
     crs = raster.crs
 
@@ -242,30 +249,30 @@ def log_raster_spatial_info(raster, source_label):
     transform = raster.transform
 
     _log_and_print(
-        f"[spatial-log] source={source_label} | type=raster | crs={crs} | crs_type={crs_type}"
+        f"[log_raster_spatial_info] source={source_label} | type=raster | crs={crs} | crs_type={crs_type}"
     )
 
     _log_and_print(
-        f"[spatial-log] source={source_label} | spatial_dims={[x_name, y_name]} | units={units}"
+        f"[log_raster_spatial_info] source={source_label} | spatial_dims={[x_name, y_name]} | units={units}"
     )
 
     _log_and_print(
-        f"[spatial-log] source={source_label} | dim={x_name} | n={raster.width} | "
+        f"[log_raster_spatial_info] source={source_label} | dim={x_name} | n={raster.width} | "
         f"min={left} | max={right} | res={resx}"
     )
 
     _log_and_print(
-        f"[spatial-log] source={source_label} | dim={y_name} | n={raster.height} | "
+        f"[log_raster_spatial_info] source={source_label} | dim={y_name} | n={raster.height} | "
         f"min={bottom} | max={top} | res={resy}"
     )
 
     _log_and_print(
-        f"[spatial-log] source={source_label} | transform={transform}"
+        f"[log_raster_spatial_info] source={source_label} | transform={transform}"
     )
 
     # Optional extra metadata
     _log_and_print(
-        f"[spatial-log] source={source_label} | dtype={raster.dtypes[0]} | nodata={raster.nodata}"
+        f"[log_raster_spatial_info] source={source_label} | dtype={raster.dtypes[0]} | nodata={raster.nodata}"
     )
 
     # ----------------------------
@@ -275,30 +282,30 @@ def log_raster_spatial_info(raster, source_label):
     # Check resolution sign (north-up rasters normally have negative y resolution)
     if resy > 0:
         _log_and_print(
-            f"[spatial-log-warning] source={source_label} | positive y resolution (unexpected orientation)"
+            f"[log_raster_spatial_info] WARNING: source={source_label} | positive y resolution (unexpected orientation)"
         )
 
     # Check geographic bounds plausibility
     if crs and crs.is_geographic:
         if not (-180 <= left <= 180 and -180 <= right <= 180):
             _log_and_print(
-                f"[spatial-log-warning] source={source_label} | longitude bounds outside [-180,180]"
+                f"[log_raster_spatial_info] WARNING: source={source_label} | longitude bounds outside [-180,180]"
             )
 
         if not (-90 <= bottom <= 90 and -90 <= top <= 90):
             _log_and_print(
-                f"[spatial-log-warning] source={source_label} | latitude bounds outside [-90,90]"
+                f"[log_raster_spatial_info] WARNING: source={source_label} | latitude bounds outside [-90,90]"
             )
 
     # Check for very large or very small pixel sizes
     if abs(resx) > 10000 or abs(resy) > 10000:
         _log_and_print(
-            f"[spatial-log-warning] source={source_label} | unusually large pixel size"
+            f"[log_raster_spatial_info] WARNING: source={source_label} | unusually large pixel size"
         )
 
     if abs(resx) < 1e-6 or abs(resy) < 1e-6:
         _log_and_print(
-            f"[spatial-log-warning] source={source_label} | unusually small pixel size"
+            f"[log_raster_spatial_info] WARNING: source={source_label} | unusually small pixel size"
         )
 
 
@@ -431,6 +438,36 @@ def load_and_limit_cutout(file_cutout, gdf_local):
     ymax += margin_y
 
     return c.sel(bounds=(xmin, ymin, xmax, ymax))
+
+
+
+def load_CF(file_nc_CF):
+
+    """This function loads the CF file."""
+
+    ##### Load CF
+    CF = xr.open_dataarray(file_nc_CF)
+
+    _log_and_print(f"[load_CF] CF loaded. CF does not have CRS")
+
+    log_xarray_spatial_info(CF, source_label=file_nc_CF)
+
+    return CF
+
+
+
+def load_CAPACITY(file_nc_CAPACITY):
+
+    """This function loads the CAPACITY file."""
+
+    ##### Load CAPACITY
+    CAPACITY = xr.open_dataarray(file_nc_CAPACITY)
+
+    _log_and_print(f"[load_CAPACITY] CAPACITY loaded. CAPACITY does not have CRS")
+
+    log_xarray_spatial_info(CAPACITY, source_label=file_nc_CAPACITY)
+
+    return CAPACITY
 
 
 

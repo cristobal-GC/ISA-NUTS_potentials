@@ -36,7 +36,7 @@ rule get_raster_ISA:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Getting raster_ISA for resource: {wildcards.resource} and region: {wildcards.region}."
+        "... [get_raster_ISA] Getting raster_ISA for resource: {wildcards.resource} and region: {wildcards.region}."
     input:
         gdf_NUTS ="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
         raster_ISA_miteco=get_file_ISA
@@ -60,7 +60,7 @@ rule get_df_ISA:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Getting df_ISA for resource: {wildcards.resource} and region: {wildcards.region}."
+        "... [get_df_ISA] Getting df_ISA for resource: {wildcards.resource} and region: {wildcards.region}."
     params:
         cutout_params=config["cutout_params"],
     input:        
@@ -87,7 +87,7 @@ rule get_nc_CF:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Getting nc_CF for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource} and region: {wildcards.region}."
+        "... [get_nc_CF] Getting nc_CF for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource} and region: {wildcards.region}."
     params:
         cutout_params=config["cutout_params"],
         CF_params=config["CF_params"],
@@ -122,7 +122,7 @@ rule get_nc_CAPACITY:
         filters=r"CFth|ISA\d+|CFth_ISA\d+",
 
     message:
-        "... Getting CAPACITY matrix for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, filters: {wildcards.filters}."
+        "... [get_nc_CAPACITY] Getting CAPACITY matrix for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, filters: {wildcards.filters}."
 
     params:
         cutout_params=config["cutout_params"],
@@ -169,7 +169,7 @@ rule get_df_CF_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Getting df_CF_CAPACITY for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, ISA: {wildcards.isa}."
+        "... [get_df_CF_CAPACITY] Getting df_CF_CAPACITY for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, ISA: {wildcards.isa}."
     input:
         nc_CF="results/ncs/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.nc",
         nc_CAPACITY="results/ncs/CAPACITY/{cutout}/{nuts}/CAPACITY_ISA{isa}_{resource}_{region}_{year}.nc",
@@ -194,7 +194,7 @@ rule get_df_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Getting df_CAPACITY for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}."
+        "... [get_df_CAPACITY] Getting df_CAPACITY for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}."
     params:
         cap_per_sqkm=lambda w: config["CF_params"][w.resource]["cap_per_sqkm"],
     input:
@@ -227,7 +227,7 @@ rule get_df_summary:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
     message:
-        "... Getting df_summary for cutout: {wildcards.cutout}, nuts: {wildcards.nuts}, year: {wildcards.year}, resource: {wildcards.resource}."
+        "... [get_df_summary] Getting df_summary for cutout: {wildcards.cutout}, nuts: {wildcards.nuts}, year: {wildcards.year}, resource: {wildcards.resource}."
     params:
         regions=get_regions_for_nuts,
         CF_threshold=lambda w: config["CF_params"][w.resource]["CF_threshold"],

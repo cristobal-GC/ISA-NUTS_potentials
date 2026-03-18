@@ -3,11 +3,15 @@ import re
 
 import numpy as np
 import pandas as pd
-import xarray as xr
-from utils import log_xarray_spatial_info
+from utils import load_CAPACITY
 
 from typing import Any
 snakemake: Any
+
+
+
+##############################
+# This script computes the total capacity and area for each ISA level, based on the CAPACITY netcdf files for each ISA level. It also computes the percentage of area for each ISA level with respect to the total area. The results are saved in a dataframe as a csv file.
 
 
 ISA_LEVELS = [0, 1, 2, 3, 4]
@@ -37,9 +41,8 @@ for file_path in files_nc_CAPACITY:
     if isa not in capacity_by_isa:
         continue
 
-    da = xr.open_dataarray(file_path)
+    da = load_CAPACITY(file_path)
     try:
-        log_xarray_spatial_info(da, source_label=file_path)
         capacity_by_isa[isa] = round(float(np.nansum(da.values)), 6)
     finally:
         da.close()

@@ -4,11 +4,11 @@ import rasterio
 
 from atlite.gis import ExclusionContainer
 from utils import (
+    load_CF,
     load_and_limit_cutout,
     load_gdf_nuts,
     resolve_user_home_path,
     log_raster_spatial_info,
-    log_xarray_spatial_info,
 )
 
 from typing import Any
@@ -21,43 +21,6 @@ logger = logging.getLogger(__name__)
 def _log_and_print(message):
     logger.info(message)
     print(message)
-
-
-def validate_and_align_CF_coordinates(CF, cutout):
-    """
-    Validate CF coordinates match cutout grid and reindex if necessary.
-    
-    This is important for filtering the CF with the ISA excluder, which is based 
-    on the cutout grid. If they don't match, the filtering will not work and the 
-    resulting A_CF and A_CF_ISA will be wrong.
-    
-    Parameters
-    ----------
-    CF : xr.DataArray
-        Capacity factor data array
-    cutout : atlite.Cutout
-        Cutout object with grid coordinates
-        
-    Returns
-    -------
-    xr.DataArray
-        CF data array aligned to cutout grid
-    """
-    _log_and_print("[validate_and_align_CF_coordinates] Validating coordinate alignment:")
-    _log_and_print(f"  Cutout x: [{cutout.data.x.min().values:.2f}, {cutout.data.x.max().values:.2f}], shape: {len(cutout.data.x)}")
-    _log_and_print(f"  Cutout y: [{cutout.data.y.min().values:.2f}, {cutout.data.y.max().values:.2f}], shape: {len(cutout.data.y)}")
-    _log_and_print(f"  CF x: [{CF.x.min().values:.2f}, {CF.x.max().values:.2f}], shape: {len(CF.x)}")
-    _log_and_print(f"  CF y: [{CF.y.min().values:.2f}, {CF.y.max().values:.2f}], shape: {len(CF.y)}")
-    
-    coords_match = CF.x.equals(cutout.data.x) and CF.y.equals(cutout.data.y)
-    
-    if not coords_match:
-        _log_and_print("Coordinates mismatch detected. Reindexing CF to cutout grid.")
-        CF = CF.sel(x=cutout.data.x, y=cutout.data.y, method="nearest")
-    else:
-        _log_and_print("Coordinates match perfectly.")
-    
-    return CF
 
 
 
@@ -75,27 +38,38 @@ def get_CAPACITY_matrix(
     if gdf_NUTS_local.crs is None:
         raise ValueError("gdf_NUTS_local must have a defined CRS.")
     
-    ##### Create excluder container, with 25x25 m resolution
-    excluder = ExclusionContainer(res=25) # no need to specify CRS here, by default it is 3035, and atlite will handle reprojection internally when adding the raster criterion, as long as we provide the correct input raster CRS.
-
+    ##### Open ISA raster, jsut to retrieve spatial info and log it, and to create the excluder with the correct resolution and CRS info. The actual masking will be done internally by atlite when building the excluder mask, by passing the raster path and its CRS to the add_raster method, so we don't need to keep the raster open after creating the excluder.
     with rasterio.open(file_raster_ISA) as raster_ISA:
+        
+        # log spatial info
         log_raster_spatial_info(raster_ISA, source_label=file_raster_ISA)
-        raster_crs = raster_ISA.crs
 
-    if raster_crs is None:
-        raise ValueError(f"Raster {file_raster_ISA} has no CRS. Cannot build ExclusionContainer mask reliably.")
+        # Check if the raster has a CRS defined
+        if raster_ISA.crs is None:
+            raise ValueError(f"Raster {file_raster_ISA} has no CRS. Cannot build ExclusionContainer mask reliably.")
+        else:
+            raster_crs = raster_ISA.crs
+
+        ##### Create excluder container, with 25x25 m resolution
+        excluder = ExclusionContainer(res=raster_ISA.res[0]) # no need to specify CRS here, by default it is 3035, and atlite will handle reprojection internally when adding the raster criterion, as long as we provide the correct input raster CRS.
+            
+
 
     _log_and_print(
-        f"[get_CAPACITY_matrix] CRS chain -> gdf: {gdf_NUTS_local.crs}, raster_ISA: {raster_crs}, excluder: {excluder.crs}, cutout: {c.crs}"
+        f"[get_CAPACITY_matrix] CRS info -> gdf: {gdf_NUTS_local.crs}, raster_ISA: {raster_crs}, excluder: {excluder.crs}, cutout: {c.crs}"
     )
+
 
     ##### Add ISA criterion to excluder
     # codes must go in a list, otherwise, the zero index works wrongly
     # Pass the raster path (not an already-open DatasetReader) so atlite can manage opening/closing internally without ending up with closed handles.
-    excluder.add_raster(file_raster_ISA, codes=ISA_list, invert=True, crs=raster_crs) # crs is the input raster crs, not the output excluder crs, because atlite will handle the reprojection internally when building the mask, and it needs to know the input raster CRS to do it correctly. If we pass the excluder CRS (which is 3035), atlite will assume the input raster is already in 3035, which is not the case, and the resulting mask will be wrong.
+    excluder.add_raster(file_raster_ISA, codes=ISA_list, invert=True, crs=raster_crs) # crs is the input raster crs, not the output excluder crs, because atlite will handle the reprojection internally when building the mask, and it needs to know the input raster CRS to do it correctly. 
     
-    ### Define shape from the region geometry in cutout CRS
-    shape = gdf_NUTS_local.geometry
+    ### Define shape from the region geometry in cutout CRS   
+    _log_and_print(
+        f"[get_CAPACITY_matrix] Getting shape to use in availability matrix. Reprojecting gdf_NUTS_local from {gdf_NUTS_local.crs} to {c.crs}."
+    ) 
+    shape = gdf_NUTS_local.to_crs(c.crs).geometry
 
     ##### Add CF threshold criterion when computing A matrix
     A = c.availabilitymatrix(shape, excluder).where(CF >= CF_threshold, 0)
@@ -103,6 +77,9 @@ def get_CAPACITY_matrix(
 
     ##### Generate CAPACITY matrices 
     # Generatearea matrix, AREA, in km2
+    _log_and_print(
+        f"[get_CAPACITY_matrix] Getting grid from cutout to use in AREA calculation. Reprojecting cutout from {c.crs} to fixed:3035."
+    ) 
     df = c.grid.to_crs(3035)
     df['area'] = df.area*1e-6
     AREA = xr.Dataset.from_dataframe(df.set_index(["y","x"]))["area"]
@@ -153,10 +130,7 @@ c = load_and_limit_cutout(file_cutout, gdf_NUTS_local)
 
 
 ##### Load CF
-CF = xr.open_dataarray(file_nc_CF)
-log_xarray_spatial_info(CF, source_label=file_nc_CF)
-# Validate CF coordinates match cutout grid
-CF = validate_and_align_CF_coordinates(CF, c)
+CF = load_CF(file_nc_CF)
 
 
 

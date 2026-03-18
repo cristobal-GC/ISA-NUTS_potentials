@@ -7,7 +7,7 @@
 
 rule retrieve_isa_onwind:
     message:
-        "... Retrieving ISA index from MITECO for onwind carrier"    
+        "... [retrieve_isa_onwind] Retrieving ISA index from MITECO for onwind carrier"    
     output:
         tiff_file="data/ISA/Clas_ISA_eol_pb.tiff",
     run:
@@ -28,7 +28,7 @@ rule retrieve_isa_onwind:
 
 rule retrieve_isa_solar:
     message:
-        "... Retrieving ISA index from MITECO for solar carrier"    
+        "... [retrieve_isa_solar] Retrieving ISA index from MITECO for solar carrier"    
     output:
         tiff_file="data/ISA/Clas_ISA_ftv_pb.tiff",
     run:

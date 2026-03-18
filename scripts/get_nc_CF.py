@@ -6,6 +6,12 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 
 
 
+##############################
+# In this script the CF matrix is computed for the given cutout, year, region and resource, and save it as a netcdf file. The CF is computed with atlite, using the cutout and the specified resource parameters (e.g. turbine type for wind, panel type and orientation for solar).
+# The resulting CF matrix *does not have CRS*.
+
+
+
 ############################## Unwrap relevant variables
 
 ##### params
