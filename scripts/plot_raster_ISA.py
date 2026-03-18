@@ -45,8 +45,7 @@ with rasterio.open(file_raster_ISA) as raster_ISA:
 
     raster_crs = raster_ISA.crs
     transform = raster_ISA.transform
-    band = raster_ISA.read(1)
-    band_masked = raster_ISA.read(1, masked=True) # This is for plotting, to avoid showing nodata values in white.
+    band_masked = raster_ISA.read(1, masked=True) # Read once as masked array for plotting.
 
 ##### Load df_ISA
 df = pd.read_csv(file_df_ISA, index_col="value")

@@ -312,7 +312,7 @@ def log_raster_spatial_info(raster, source_label):
 
 def _subtract_excluded_geometries(gdf_local, gdf_all):
     """
-    Rebuild ES geometry by subtracting ES7 (Canarias) from ES.
+    Rebuild ES geometry by subtracting excluded Spanish non-mainland regions.
 
     This avoids creating a large union geometry in memory.
 
@@ -327,25 +327,29 @@ def _subtract_excluded_geometries(gdf_local, gdf_all):
     Returns
     -------
     geopandas.GeoDataFrame
-        gdf_local with ES geometry after removing ES7.
+        gdf_local with ES geometry after removing excluded subregions.
     """
     # Apply only when the requested local geometry corresponds to ES.
     if "ES" not in gdf_local.index:
         return gdf_local
 
-    if "ES7" not in gdf_all.index:
+    excluded_ids = ["ES7", "ES63", "ES64"]
+    available_excluded_ids = [nid for nid in excluded_ids if nid in gdf_all.index]
+
+    if not available_excluded_ids:
         _log_and_print(
-            "[_subtract_excluded_geometries] ES7 not found in gdf_all. Returning original ES geometry."
+            "[_subtract_excluded_geometries] No excluded Spanish subregions found in gdf_all. Returning original ES geometry."
         )
         return gdf_local
 
-    excluded_geom = gdf_all.loc["ES7", "geometry"]
-
     gdf_local = gdf_local.copy()
-    gdf_local["geometry"] = gdf_local.geometry.difference(excluded_geom)
+
+    for excluded_id in available_excluded_ids:
+        excluded_geom = gdf_all.loc[excluded_id, "geometry"]
+        gdf_local["geometry"] = gdf_local.geometry.difference(excluded_geom)
 
     _log_and_print(
-        "[_subtract_excluded_geometries] Subtracted ES7 geometry from ES."
+        f"[_subtract_excluded_geometries] Subtracted excluded geometries from ES: {available_excluded_ids}"
     )
 
     return gdf_local
