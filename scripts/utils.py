@@ -527,6 +527,13 @@ def plot_dataarray_on_map(
     """
     import matplotlib.pyplot as plt
     
+    ##### Auto-detect spatial dimensions if defaults don't exist
+    if x_coord not in data.dims or y_coord not in data.dims:
+        detected_dims = _select_spatial_dims_xarray(data)
+        if len(detected_dims) >= 2:
+            x_coord, y_coord = detected_dims[0], detected_dims[1]
+            _log_and_print(f"[plot_dataarray_on_map] Auto-detected spatial dims: x={x_coord}, y={y_coord}")
+    
     ##### Setup plot parameters
     fig, ax = plt.subplots(figsize=(size, size))
     
