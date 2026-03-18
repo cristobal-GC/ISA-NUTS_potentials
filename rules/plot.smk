@@ -13,6 +13,8 @@
 rule plot_ISA:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/plot_ISA/{nuts}/plot_ISA_{resource}_{region}.tsv"
     message:
         "... [plot_ISA] Plotting ISA map for resource: {wildcards.resource}, region: {wildcards.region}, resolution: {wildcards.resolution} format: {wildcards.format}."
     params:
@@ -41,6 +43,8 @@ rule plot_ISA:
 rule plot_cutout:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/plot_cutout/{cutout}/{nuts}/plot_cutout_{resource}_{region}_{year}.tsv"
     message:
         "... [plot_cutout] Plotting cutout map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:
@@ -74,6 +78,8 @@ rule plot_cutout:
 rule plot_CF:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/plot_CF/{cutout}/{nuts}/plot_CF_{resource}_{region}_{year}.tsv"
     message:
         "... [plot_CF] Plotting CF map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:
@@ -113,6 +119,8 @@ rule plot_CAPACITY:
         nuts="NUTS0|NUTS2|NUTS3",
         resource="onwind|solar",
         filters=r"CFth|ISA\d+|CFth_ISA\d+",
+    benchmark:
+        "benchmarks/plot_CAPACITY/{cutout}/{nuts}/plot_CAPACITY_{filters}_{resource}_{region}_{year}.tsv"
     message:
         "... [plot_CAPACITY] Plotting CAPACITY map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, filters: {wildcards.filters}, format: {wildcards.format}."
     params:
@@ -140,6 +148,8 @@ rule plot_CAPACITY:
 rule plot_df_CF_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/plot_df_CF_CAPACITY/{cutout}/{nuts}/plot_df_CF_CAPACITY_{resource}_{region}_{year}.tsv"
     message:
         "... [plot_df_CF_CAPACITY] Plotting CF vs CUM_CAPACITY curves for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:

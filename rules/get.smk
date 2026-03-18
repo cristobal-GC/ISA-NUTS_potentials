@@ -35,6 +35,8 @@ def get_regions_for_nuts(wc):
 rule get_raster_ISA:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/get_raster_ISA/{nuts}/get_raster_ISA_{resource}_{region}.tsv"
     message:
         "... [get_raster_ISA] Getting raster_ISA for resource: {wildcards.resource} and region: {wildcards.region}."
     input:
@@ -59,6 +61,8 @@ rule get_raster_ISA:
 rule get_df_ISA:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/get_df_ISA/{nuts}/get_df_ISA_{resource}_{region}.tsv"
     message:
         "... [get_df_ISA] Getting df_ISA for resource: {wildcards.resource} and region: {wildcards.region}."
     params:
@@ -86,6 +90,8 @@ rule get_df_ISA:
 rule get_nc_CF:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/get_nc_CF/{cutout}/{nuts}/get_nc_CF_{resource}_{region}_{year}.tsv"
     message:
         "... [get_nc_CF] Getting nc_CF for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource} and region: {wildcards.region}."
     params:
@@ -121,6 +127,8 @@ rule get_nc_CAPACITY:
         resource="onwind|solar",
         filters=r"CFth|ISA\d+|CFth_ISA\d+",
 
+    benchmark:
+        "benchmarks/get_nc_CAPACITY/{cutout}/{nuts}/get_nc_CAPACITY_{filters}_{resource}_{region}_{year}.tsv"
     message:
         "... [get_nc_CAPACITY] Getting CAPACITY matrix for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, filters: {wildcards.filters}."
 
@@ -168,6 +176,8 @@ rule get_nc_CAPACITY:
 rule get_df_CF_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/get_df_CF_CAPACITY/{cutout}/{nuts}/get_df_CF_CAPACITY_ISA{isa}_{resource}_{region}_{year}.tsv"
     message:
         "... [get_df_CF_CAPACITY] Getting df_CF_CAPACITY for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, ISA: {wildcards.isa}."
     input:
@@ -193,6 +203,8 @@ rule get_df_CF_CAPACITY:
 rule get_df_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/get_df_CAPACITY/{cutout}/{nuts}/get_df_CAPACITY_{resource}_{region}_{year}.tsv"
     message:
         "... [get_df_CAPACITY] Getting df_CAPACITY for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}."
     params:
@@ -226,6 +238,8 @@ rule get_df_CAPACITY:
 rule get_df_summary:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/get_df_summary/{cutout}/{nuts}/get_df_summary_{resource}_{year}.tsv"
     message:
         "... [get_df_summary] Getting df_summary for cutout: {wildcards.cutout}, nuts: {wildcards.nuts}, year: {wildcards.year}, resource: {wildcards.resource}."
     params:

@@ -9,6 +9,8 @@ DAG/
 
 .snakemake/
 
+benchmarks/
+
 .gitattributes
 
 
