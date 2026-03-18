@@ -36,7 +36,7 @@ labels = fig_params["ISA"]["labels"]
 size = fig_params["sizes"]["LR"]["size"]
 fontsize = fig_params["sizes"]["LR"]["fontsize"]
 
-fig, ax = plt.subplots(figsize=(size, size))
+fig, ax = plt.subplots(figsize=(size, size/2))
 
 ##### Plot stairs for each ISA code
 for kk, vv in dic_CF_CAPACITY.items():
