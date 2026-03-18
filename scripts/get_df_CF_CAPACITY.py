@@ -1,3 +1,4 @@
+import pandas as pd
 import xarray as xr
 from utils import load_CF, load_CAPACITY
 
@@ -35,6 +36,9 @@ df = (
     .loc[lambda d: d["CAPACITY"] > 0]
     .sort_values("CF", ascending=False)
 )
+
+if df.empty:
+    df = pd.DataFrame({"CF": [0.0], "CAPACITY": [0.0]})
 
 df["CAPACITY"] = df["CAPACITY"].round(6)
 df["CUM_CAPACITY"] = df["CAPACITY"].cumsum().round(6)

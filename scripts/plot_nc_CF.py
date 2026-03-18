@@ -62,7 +62,10 @@ vmin = None
 vmax = None
 
 for file_path in files_df_CF_CAPACITY:
-    df = pd.read_csv(file_path, usecols=["CF"])
+
+    # Load only CF and CAPACITY columns, filter out zero CAPACITY rows, and compute file-specific vmin/vmax for CF. Then update global vmin/vmax across all files.
+    df = pd.read_csv(file_path, usecols=["CF", "CAPACITY"])
+    df = df.loc[df["CAPACITY"] > 0, ["CF"]]
     if df.empty:
         continue
 
