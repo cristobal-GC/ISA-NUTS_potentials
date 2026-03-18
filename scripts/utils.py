@@ -312,10 +312,9 @@ def log_raster_spatial_info(raster, source_label):
 
 def _subtract_excluded_geometries(gdf_local, gdf_all):
     """
-    Rebuild ES geometry by intersecting with Spanish NUTS1 union excluding ES7.
+    Rebuild ES geometry by subtracting ES7 (Canarias) from ES.
 
-    This is used to remove non-mainland/islet artifacts that are not fully handled
-    by subtracting a fixed set of excluded sub-regions.
+    This avoids creating a large union geometry in memory.
 
     Parameters
     ----------
@@ -328,31 +327,25 @@ def _subtract_excluded_geometries(gdf_local, gdf_all):
     Returns
     -------
     geopandas.GeoDataFrame
-        gdf_local with ES geometry intersected with NUTS1 union (excluding ES7).
+        gdf_local with ES geometry after removing ES7.
     """
-    from shapely.ops import unary_union
-
     # Apply only when the requested local geometry corresponds to ES.
     if "ES" not in gdf_local.index:
         return gdf_local
 
-    # Spanish NUTS1 IDs are of the form ES[0-9] (e.g. ES1 ... ES7).
-    # Excluding ES7 (Canarias) keeps mainland + remaining continental subregions.
-    ids_to_keep = [
-        nid
-        for nid in gdf_all.index.astype(str)
-        if nid.startswith("ES") and len(nid) == 3 and nid[2].isdigit() and nid != "ES7"
-    ]
-    if not ids_to_keep:
+    if "ES7" not in gdf_all.index:
+        _log_and_print(
+            "[_subtract_excluded_geometries] ES7 not found in gdf_all. Returning original ES geometry."
+        )
         return gdf_local
 
-    keep_geom = unary_union(gdf_all.loc[ids_to_keep].geometry)
+    excluded_geom = gdf_all.loc["ES7", "geometry"]
 
     gdf_local = gdf_local.copy()
-    gdf_local["geometry"] = gdf_local.geometry.intersection(keep_geom)
+    gdf_local["geometry"] = gdf_local.geometry.difference(excluded_geom)
 
     _log_and_print(
-        f"[_subtract_excluded_geometries] Intersected ES with NUTS1 excluding ES7: {ids_to_keep}"
+        "[_subtract_excluded_geometries] Subtracted ES7 geometry from ES."
     )
 
     return gdf_local
