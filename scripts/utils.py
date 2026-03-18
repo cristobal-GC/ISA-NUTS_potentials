@@ -385,12 +385,12 @@ def load_gdf_nuts(file_gdf_NUTS, region):
         f"[load_gdf_nuts] Filtered local region: {region}"
     )
 
-    # For ES, also apply the geometry subtraction to remove non-mainland/islet artifacts.
+    # For ES, also apply the geometry subtraction to remove Canarias, Ceuta and Melilla 
     if region == 'ES':
         gdf_NUTS_local = _subtract_excluded_geometries(gdf_NUTS_local, gdf_NUTS)
         # Log
         _log_and_print(
-            f"[load_gdf_nuts] Applied geometry subtraction for ES to remove non-mainland/islet artifacts."
+            "[load_gdf_nuts] Applied geometry subtraction for ES to remove Canarias, Ceuta and Melilla."
         )
 
     return gdf_NUTS, gdf_NUTS_local
