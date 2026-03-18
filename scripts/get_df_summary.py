@@ -23,10 +23,10 @@ file_df_summary = snakemake.output["df_summary"]
 ############################## Operations
 
 pattern = re.compile(
-    r"df_CF_CAPACITY_ISA(?P<isa>\d+)_[^_]+_(?P<region>[A-Z]{2}\d{2,3})_\d+\.csv$"
+    r"df_CF_CAPACITY_ISA(?P<isa>\d+)_[^_]+_(?P<region>[A-Z]{2}(?:\d{2,3})?)_\d+\.csv$"
 )
 pattern_capacity = re.compile(
-    r"df_CAPACITY_[^_]+_(?P<region>[A-Z]{2}\d{2,3})_\d+\.csv$"
+    r"df_CAPACITY_[^_]+_(?P<region>[A-Z]{2}(?:\d{2,3})?)_\d+\.csv$"
 )
 
 summary = {
