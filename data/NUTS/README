@@ -19,3 +19,21 @@ Columns:
     'URBN_TYPE'
     'COAST_TYPE'
     'geometry'
+
+
+
+
+##### Municipios:
+
+FUENTE 1:
+https://www.geoboundaries.org/countryDownloads.html
+
+Columns:
+
+    'shapeName'
+    'shapeISO'
+    'shapeID'
+    'shapeGroup'
+    'shapeType',
+    'geometry'
+
