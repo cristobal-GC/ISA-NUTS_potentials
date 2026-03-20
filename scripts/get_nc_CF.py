@@ -48,7 +48,8 @@ if resource=='onwind':
     # Compute CF with atlite    
     CF = c.wind(
         turbine=turbine,
-        capacity_factor=True  # capacity_factor_timeseries=True is for hCF
+        capacity_factor=True,  # capacity_factor_timeseries=True is for hCF,
+        add_cutout_windspeed=True   #
     )
 elif resource=='solar':
     CF = c.pv(
