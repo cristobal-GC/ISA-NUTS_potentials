@@ -63,5 +63,5 @@ plot_dataarray_on_map(
     linewidth=linewidth,
     fontsize=fontsize,
     title=f"Total capacity: {CAPACITY.sum().values.item():.2f} MW",
-    bounds_type="data"
+    bounds_type="gdf"
 )

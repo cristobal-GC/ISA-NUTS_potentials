@@ -163,3 +163,31 @@ rule plot_df_CF_CAPACITY:
         plot_CF_CAPACITY="results/figs/CF_CAPACITY/{cutout}/{nuts}/CF_CAPACITY_{resource}_{region}_{year}.{format}"
     script:
         "../scripts/plot_df_CF_CAPACITY.py"
+
+
+
+#################### plot_venn_single
+#
+# Wildcards:
+#   - cutout     [era5, ...]
+#   - nuts       [NUTS2, NUTS3]
+#   - region     [ES11, ... ]
+#   - resource   [onwind, solar]
+#   - year       [2013, ...]
+#   - format     [png, pdf]
+
+rule plot_venn_single:
+    wildcard_constraints:
+        nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/plot_venn_single/{cutout}/{nuts}/plot_venn_single_{resource}_{region}_{year}.{format}.tsv"
+    message:
+        "... [plot_venn_single] Plotting Venn diagram from df_summary for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
+    params:
+        fig_params=config["fig_params"]
+    input:
+        df_summary="results/dfs/summary/{cutout}/{nuts}/df_summary_{resource}_{year}.csv"
+    output:
+        plot_venn="results/figs/venn/{cutout}/{nuts}/venn_{resource}_{region}_{year}.{format}"
+    script:
+        "../scripts/plot_venn_single.py"

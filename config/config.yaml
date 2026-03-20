@@ -5,14 +5,14 @@ regions:
   ##########- ES
   NUTS2:
   - ES11 # Galicia
-  # - ES12 # Principado de Asturias
+  - ES12 # Principado de Asturias
   # - ES13 # Cantabria
   # - ES21 # País Vasco
   # - ES22 # Comunidad Foral de Navarra
   # - ES23 # La Rioja
   # - ES24 # Aragón
   # - ES30 # Comunidad de Madrid
-  # - ES41 # Castilla y León
+  - ES41 # Castilla y León
   # - ES42 # Castilla-La Mancha
   # - ES43 # Extremadura
   # - ES51 # Cataluña
@@ -120,7 +120,7 @@ CF_params:
     turbine: Vestas_V112_3MW_h100
     correction_factor: 0.93
     cap_per_sqkm: 10
-    CF_threshold: 0.3
+    CF_threshold: 0.2 # 0.285388
   solar:
     panel: CSi
     orientation:

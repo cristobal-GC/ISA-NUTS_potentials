@@ -11,6 +11,7 @@ if Path("config/config.yaml").exists():
 
 ##### Include rules
 include: "rules/get.smk",
+include: "rules/latex.smk"
 include: "rules/plot.smk"
 include: "rules/retrieve.smk"
 
@@ -93,14 +94,6 @@ rule all:
         #"DAG/filegraph.pdf",
 
         [
-            f"results/maps/ISA/{nuts}/{resolution}/ISA_{resource}_{region}_{resolution}.{fmt}"
-            for nuts, region in REGION_NUTS_PAIRS
-            for resource in RESOURCES
-            for resolution in RESOLUTIONS
-            for fmt in FORMATS
-        ],
-
-        [
             f"results/maps/cutout/{cutout}/{nuts}/cutout_{resource}_{region}_{year}.{fmt}"
             for nuts, region in REGION_NUTS_PAIRS
             for cutout in CUTOUTS
@@ -108,9 +101,9 @@ rule all:
             for resource in RESOURCES
             for fmt in FORMATS
         ],
-
+       
         [
-            f"results/maps/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.{fmt}"
+            f"results/figs/venn/{cutout}/{nuts}/venn_{resource}_{region}_{year}.{fmt}"
             for nuts, region in REGION_NUTS_PAIRS
             for cutout in CUTOUTS
             for year in YEARS
@@ -118,6 +111,29 @@ rule all:
             for fmt in FORMATS
         ],
 
+        [
+            f"results/LaTex/{cutout}/{year}/{resource}/{nuts}/summary_{region}_{resolution}.pdf"
+            for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for resolution in RESOLUTIONS
+        ]
+
+
+rule plot_ISAs:
+    input:
+        [
+            f"results/maps/ISA/{nuts}/{resolution}/ISA_{resource}_{region}_{resolution}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for resource in RESOURCES
+            for resolution in RESOLUTIONS
+            for fmt in FORMATS
+        ]
+
+
+rule plot_CAPACITYs:
+    input:
         [
             f"results/maps/CAPACITY/{cutout}/{nuts}/CAPACITY_{filters}_{resource}_{region}_{year}.{fmt}"
             for nuts, region in REGION_NUTS_PAIRS
@@ -126,31 +142,18 @@ rule all:
             for year in YEARS
             for resource in RESOURCES
             for fmt in FORMATS
-        ],
+        ]
 
+
+rule plot_CFs:
+    input:
         [
-            f"results/figs/CF_CAPACITY/{cutout}/{nuts}/CF_CAPACITY_{resource}_{region}_{year}.{fmt}"
+            f"results/maps/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.{fmt}"
             for nuts, region in REGION_NUTS_PAIRS
             for cutout in CUTOUTS
             for year in YEARS
             for resource in RESOURCES
             for fmt in FORMATS
-        ],
-
-        [
-            f"results/dfs/CAPACITY/{cutout}/{nuts}/df_CAPACITY_{resource}_{region}_{year}.csv"
-            for nuts, region in REGION_NUTS_PAIRS
-            for cutout in CUTOUTS
-            for year in YEARS
-            for resource in RESOURCES
-        ],
-
-        [
-            f"results/dfs/summary/{cutout}/{nuts}/df_summary_{resource}_{year}.csv"
-            for nuts in sorted({nuts for nuts, _ in REGION_NUTS_PAIRS})
-            for cutout in CUTOUTS
-            for year in YEARS
-            for resource in RESOURCES
         ]
 
 

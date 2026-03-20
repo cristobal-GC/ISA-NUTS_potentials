@@ -555,20 +555,22 @@ def plot_dataarray_on_map(
     mappable = data.plot(**plot_kwargs)
     
     ##### Configure axes
-    ax.tick_params(axis="both", labelsize=fontsize*0.8)
-    ax.set_xlabel(x_coord.capitalize(), fontsize=fontsize*0.8)
-    ax.set_ylabel(y_coord.capitalize(), fontsize=fontsize*0.8)
-    
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+
     ##### Add colorbar
     cbar = fig.colorbar(
         mappable,
         ax=ax,
         orientation='vertical',
         fraction=0.046,
-        pad=0.04
+        pad=0.04,
+        shrink=0.9
     )
-    cbar.set_label(cbar_label, fontsize=fontsize)
-    cbar.ax.tick_params(labelsize=fontsize)
+    cbar.set_label(cbar_label, fontsize=fontsize*1.5)
+    cbar.ax.tick_params(labelsize=fontsize*1.5)
     
     ##### Add NUTS boundaries
     # Add gdf for regions with the same NUTS code with thin grey lines
@@ -613,7 +615,7 @@ def plot_dataarray_on_map(
     
     ##### Add title if provided, otherwise clear any auto-generated title
     if title:
-        ax.set_title(title, fontsize=fontsize)
+        ax.set_title(title, fontsize=fontsize*1.2)
     else:
         ax.set_title("")  # Clear any auto-generated title from xarray
     

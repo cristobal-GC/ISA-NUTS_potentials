@@ -16,6 +16,9 @@ files_df_CAPACITY = list(snakemake.input["dfs_CAPACITY"])
 regions = list(snakemake.params["regions"])
 CF_threshold = float(snakemake.params["CF_threshold"])
 cap_per_sqkm = float(snakemake.params["cap_per_sqkm"])
+##### wildcards
+nuts = snakemake.wildcards["nuts"]
+resource = snakemake.wildcards["resource"]
 ##### output
 file_df_summary = snakemake.output["df_summary"]
 
@@ -30,7 +33,11 @@ pattern_capacity = re.compile(
 )
 
 summary = {
-    region: {**{f"CAPACITY_ISA{i}": 0.0 for i in range(5)}, **{f"CAPACITY_CFth_ISA{i}": 0.0 for i in range(5)}}
+    region: {
+        **{f"CAPACITY_ISA{i}": 0.0 for i in range(5)},
+        **{f"CAPACITY_CFth_ISA{i}": 0.0 for i in range(5)},
+        "GENERATION_CFth_ISA4": 0.0,
+    }
     for region in regions
 }
 
@@ -65,6 +72,14 @@ for file_path in files_df_CF_CAPACITY:
 
     summary[region][f"CAPACITY_ISA{isa}"] = round(cap_total, 6)
     summary[region][f"CAPACITY_CFth_ISA{isa}"] = round(cap_th, 6)
+
+    if isa == 4:
+        cap_col = "CAPACITY"
+        if cap_col not in df.columns:
+            raise ValueError(f"Missing required column '{cap_col}' in {file_path}.")
+
+        GENERATION_th_twh = float((df_th[cap_col] * df_th[cf_col] * 8760 / 1000000).sum()) if not df_th.empty else 0.0
+        summary[region]["GENERATION_CFth_ISA4"] = round(GENERATION_th_twh, 6)
 
 
 def get_total_area_from_df_capacity(file_path):
@@ -102,7 +117,7 @@ cols_capacity_th = [f"CAPACITY_CFth_ISA{i}" for i in range(5)]
 cols_capacity_all = cols_capacity + cols_capacity_th + ["CAPACITY_CFth"]
 
 summary_df = pd.DataFrame.from_dict(summary, orient="index")
-summary_df = summary_df[cols_capacity + cols_capacity_th]
+summary_df = summary_df[cols_capacity + cols_capacity_th + ["GENERATION_CFth_ISA4"]]
 summary_df["CAPACITY_CFth"] = summary_df[cols_capacity_th].sum(axis=1).round(6)
 
 for region in summary_df.index:
@@ -126,7 +141,54 @@ for capacity_col in cols_capacity_all:
 cols_area = [f"area_{col.replace('CAPACITY_', '')}" for col in cols_capacity_all]
 cols_porc_area = [f"porc_area_{col.replace('CAPACITY_', '')}" for col in cols_capacity_all]
 
-summary_df = summary_df[cols_capacity_all + cols_area + cols_porc_area]
+summary_df = summary_df[cols_capacity_all + cols_area + cols_porc_area + ["GENERATION_CFth_ISA4"]]
+
+
+def load_metric_by_region(file_path, value_col):
+    metric = pd.read_csv(file_path)
+    if "code" not in metric.columns:
+        raise ValueError(f"Missing required column 'code' in {file_path}")
+    if value_col not in metric.columns:
+        raise ValueError(f"Missing required column '{value_col}' in {file_path}")
+
+    metric["code"] = metric["code"].astype(str).str.strip().str.upper()
+    return metric.set_index("code")[value_col].to_dict()
+
+
+if nuts in {"NUTS0", "NUTS2"}:
+    esios_dir = Path("data/esios")
+    file_demand_2024 = esios_dir / f"electricity_demand_2024_{nuts}.csv"
+    file_installed_2024 = esios_dir / f"esios_onwind_capacity_2024_{nuts}.csv"
+
+    if not file_demand_2024.exists():
+        raise FileNotFoundError(
+            f"Required demand file for {nuts} not found: {file_demand_2024}"
+        )
+
+    demand_by_region = load_metric_by_region(file_demand_2024, "demand_2024")
+    summary_df["DEMAND_2024"] = [
+        round(float(demand_by_region.get(region, 0.0)), 6) for region in summary_df.index
+    ]
+
+    if resource == "onwind":
+        if not file_installed_2024.exists():
+            raise FileNotFoundError(
+                f"Required installed capacity file for {nuts} not found: {file_installed_2024}"
+            )
+        installed_by_region = load_metric_by_region(file_installed_2024, "wind_capacity")
+        summary_df["installed_2024"] = [
+            round(float(installed_by_region.get(region, 0.0)), 6) for region in summary_df.index
+        ]
+    else:
+        summary_df["installed_2024"] = 0.0
+
+    summary_df["GENERATION_CFth_ISA4_perc_DEMAND_2024"] = [
+        round((summary_df.loc[region, "GENERATION_CFth_ISA4"] / summary_df.loc[region, "DEMAND_2024"]) * 100, 6)
+        if summary_df.loc[region, "DEMAND_2024"] > 0
+        else 0.0
+        for region in summary_df.index
+    ]
+
 summary_df.index.name = "region"
 
 

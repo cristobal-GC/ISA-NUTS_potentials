@@ -111,17 +111,20 @@ ax.legend(
     bbox_to_anchor=(1.4, 1),  # legend out of the plot    
 )
 
-# Set limits. Note that we cannot use the same logic as plot_dataarray_on_map because the raster has a CRS different from 3035
+# Set limits centered on the region with equal x/y extent (square map).
+# The raster CRS is a projected one (units: metres), so delta_x and delta_y are
+# directly comparable. Taking max(delta_x, delta_y) and centering ensures that
+# both axes span the same distance, producing a square, undistorted map.
 xmin, ymin, xmax, ymax = gdf_NUTS_local.total_bounds
 center_x = (xmax + xmin) / 2
 center_y = (ymax + ymin) / 2
 delta_x = xmax - xmin
 delta_y = ymax - ymin
 
-margin = 0.02
+half_extent = max(delta_x, delta_y) * 0.5 * 1.02
 
-ax.set_xlim(xmin - margin*delta_x, xmax + margin*delta_x)
-ax.set_ylim(ymin - margin*delta_y, ymax + margin*delta_y)
+ax.set_xlim(center_x - half_extent, center_x + half_extent)
+ax.set_ylim(center_y - half_extent, center_y + half_extent)
 
 ax.set_xticks([])
 ax.set_yticks([])

@@ -1,0 +1,100 @@
+\documentclass{article}
+
+\usepackage{lmodern}  % fuente escalable
+
+\usepackage[a4paper]{geometry} % para orientación horizontal
+\usepackage{graphicx}  % para incluir imágenes
+\usepackage[absolute,overlay]{textpos} % para posicionamiento absoluto
+
+\usepackage[most]{tcolorbox}
+
+\usepackage{xcolor}
+
+\definecolor{low}{HTML}{1a9850}
+\definecolor{marron}{HTML}{8B4513}
+\definecolor{gris}{HTML}{555555} % {808080}
+\definecolor{fondo}{HTML}{F0FAF0}
+
+
+% Configuración de la página: 26cm x 15cm
+\geometry{
+  paperwidth=33.6cm,
+  paperheight=21cm,
+  left=0cm,
+  top=0cm,
+  right=0cm,
+  bottom=0cm
+}
+
+\begin{document}
+\pagestyle{empty} % sin número de página
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Título
+
+\begin{textblock*}{\textwidth}(1cm,0.5cm)
+{\fontsize{50}{60}\selectfont REGION (CODIGONUTS)}
+\end{textblock*}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fila 1
+
+
+%%%%% Figura mapa ISA
+\begin{textblock*}{\textwidth}(0.5cm,2.5cm)
+{\color{gris} Environmental sensitivity to wind farms} \\
+    \includegraphics[width=12cm]{ROOTPATH/results/maps/ISA/NUTSLEVEL/RESOLUTION/ISA_RESOURCE_CODIGONUTS_RESOLUTION.FIGEXT}
+\end{textblock*}
+
+
+%%%%% Figura mapa CF
+\begin{textblock*}{\textwidth}(12.5cm,2.5cm)
+{\color{gris} Wind power capacity factor (CF) at 100 m. height} \\
+    \includegraphics[width=10.5cm]{ROOTPATH/results/maps/CF/CUTOUT/NUTSLEVEL/CF_RESOURCE_CODIGONUTS_YEAR.FIGEXT}
+\end{textblock*}
+
+
+%%%%% Figura mapa CAPACITY threshold
+\begin{textblock*}{\textwidth}(23.0cm,2.5cm)
+{\color{gris} Wind power capacity at ISA-4 and CF$\ge$THRESHOLD} \\
+    \includegraphics[width=10.5cm]{ROOTPATH/results/maps/CAPACITY/CUTOUT/NUTSLEVEL/CAPACITY_CFth_ISA4_RESOURCE_CODIGONUTS_YEAR.FIGEXT}
+\end{textblock*}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% fila 2
+
+
+%%%%% Figura CF_CAPACITY
+\begin{textblock*}{\textwidth}(0.5cm,12.0cm)
+{\color{gris} \hspace{1cm} Wind power potential vs. capacity factor}\\
+    \includegraphics[height=8.9cm]{ROOTPATH/results/figs/CF_CAPACITY/CUTOUT/NUTSLEVEL/CF_CAPACITY_RESOURCE_CODIGONUTS_YEAR.FIGEXT}
+\end{textblock*}
+
+
+
+%%%%% SUMMARY
+\begin{textblock*}{14cm}(18.5cm,13.0cm)
+\begin{tcolorbox}[colback=fondo,colframe=black,boxrule=0.5pt,arc=5pt,left=0pt,right=15pt,top=15pt,bottom=15pt]
+\large
+    \begin{itemize}
+        \item \texttt{\textbf{LAND:}} {\color{low}\textbf{PORCLAND\%}} of the region combines low enviromental sensitivity (ISA-4) and high wind resource (CF$>$THRESHOLD). \vspace{0.4cm}
+        
+        \item \texttt{\textbf{WIND POWER CAPACITY:}} {\color{low}\textbf{POTCAP GW}} could be installed in these areas.
+
+            INSTALLED_NOTE
+
+        ENERGY_NOTE
+    \end{itemize}
+\end{tcolorbox}
+\end{textblock*}
+
+
+
+\end{document}

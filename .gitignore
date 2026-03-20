@@ -19,6 +19,10 @@ benchmarks/
 .pixi/*
 !.pixi/config.toml
 
+# Python virtual environments
+.venv/
+venv/
+
 
 
 # Jupyter Notebook
