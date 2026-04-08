@@ -109,6 +109,11 @@ years:
 
 ########## PARAMETERS
 
+gebco:
+  url: "https://data.pypsa.org/workflows/eur/gebco/2014/GEBCO_2014_2D.nc"
+  folder: "data/GEBCO"
+  file_name: "GEBCO_2014_2D.nc"
+
 cutout_params:
   era5_2013:
     path: "~/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2013-sarah3-era5.nc"

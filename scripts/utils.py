@@ -468,6 +468,32 @@ def load_CAPACITY(file_nc_CAPACITY):
 
 
 
+def load_GEBCO(file_nc_GEBCO):
+
+    """This function loads the GEBCO file as a DataArray."""
+
+    ds_gebco = xr.open_dataset(file_nc_GEBCO)
+
+    if "elevation" in ds_gebco.data_vars:
+        gebco = ds_gebco["elevation"]
+    else:
+        data_vars = list(ds_gebco.data_vars)
+
+        if len(data_vars) != 1:
+            raise ValueError(
+                f"[load_GEBCO] Could not infer GEBCO variable from {file_nc_GEBCO}. Found variables: {data_vars}"
+            )
+
+        gebco = ds_gebco[data_vars[0]]
+
+    _log_and_print(f"[load_GEBCO] GEBCO loaded from {file_nc_GEBCO}")
+
+    log_xarray_spatial_info(gebco, source_label=file_nc_GEBCO)
+
+    return gebco
+
+
+
 def plot_dataarray_on_map(
     data,
     gdf_NUTS,

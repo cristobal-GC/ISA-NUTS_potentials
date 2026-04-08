@@ -121,6 +121,15 @@ rule all:
         ]
 
 
+
+rule retrieve:
+    input:
+        rules.retrieve_isa_onwind.output.tiff_file,
+        rules.retrieve_isa_solar.output.tiff_file,
+        rules.retrieve_gebco.output.gebco
+
+
+
 rule plot_ISAs:
     input:
         [
@@ -128,6 +137,15 @@ rule plot_ISAs:
             for nuts, region in REGION_NUTS_PAIRS
             for resource in RESOURCES
             for resolution in RESOLUTIONS
+            for fmt in FORMATS
+        ]
+
+
+rule plot_GEBCOs:
+    input:
+        [
+            f"results/maps/GEBCO/{nuts}/GEBCO_{region}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
             for fmt in FORMATS
         ]
 

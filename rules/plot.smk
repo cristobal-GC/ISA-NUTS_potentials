@@ -1,6 +1,34 @@
 
 
 
+#################### plot_GEBCO
+#
+# Wildcards:
+#   - nuts       [NUTS0, NUTS2, NUTS3]
+#   - region     [ES, ES11, ... ]
+#   - format     [png, pdf]
+
+GEBCO_CFG = config.get("gebco", {})
+
+rule plot_GEBCO:
+    wildcard_constraints:
+        nuts="NUTS0|NUTS2|NUTS3",
+    benchmark:
+        "benchmarks/plot_GEBCO/{nuts}/plot_GEBCO_{region}.{format}.tsv"
+    message:
+        "... [plot_GEBCO] Plotting GEBCO orography for region: {wildcards.region}, format: {wildcards.format}."
+    params:
+        fig_params=config["fig_params"]
+    input:
+        gdf_NUTS="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
+        nc_GEBCO=f"{GEBCO_CFG['folder']}/{GEBCO_CFG['file_name']}"
+    output:
+        map_GEBCO="results/maps/GEBCO/{nuts}/GEBCO_{region}.{format}"
+    script:
+        "../scripts/plot_nc_GEBCO.py"
+
+
+
 #################### plot_ISA
 #
 # Wildcards:

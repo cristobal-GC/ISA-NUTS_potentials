@@ -109,6 +109,11 @@ years:
 
 ########## PARAMETERS
 
+gebco:
+  url: "https://data.pypsa.org/workflows/eur/gebco/2014/GEBCO_2014_2D.nc"
+  folder: "data/GEBCO"
+  file_name: "GEBCO_2014_2D.nc"
+
 cutout_params:
   era5_2013:
     path: "~/SANDBOX/cutouts/europe-2021-sarah3-era5.nc"

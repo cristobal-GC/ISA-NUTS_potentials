@@ -45,3 +45,23 @@ rule retrieve_isa_solar:
             with ZipFile(io.BytesIO(response.read())) as zf:
                 with zf.open("Clas_ISA_ftv_pb.tiff") as src, open(output.tiff_file, "wb") as dst:
                     dst.write(src.read())        
+
+
+#################### retrieve_GEBCO
+
+GEBCO_CFG = config.get("gebco", {})
+
+rule retrieve_gebco:
+    message:
+        "... [retrieve_gebco] Retrieving GEBCO bathymetry data"
+    params:
+        url=GEBCO_CFG["url"],
+    output:
+        gebco=f"{GEBCO_CFG['folder']}/{GEBCO_CFG['file_name']}",
+    run:
+        from pathlib import Path
+        import urllib.request
+
+        output_folder = Path(output["gebco"]).parent
+        output_folder.mkdir(parents=True, exist_ok=True)
+        urllib.request.urlretrieve(params.url, output["gebco"])
