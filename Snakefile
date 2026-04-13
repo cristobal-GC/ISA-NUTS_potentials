@@ -267,6 +267,12 @@ rule all:
         ],
 
         [
+            f"results/maps/GEBCO/{nuts}/GEBCO_{region}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for fmt in FORMATS
+        ],
+
+        [
             f"results/LaTex/{cutout}/{year}/{resource}/{nuts}/summary_{region}_{resolution}.pdf"
             for nuts, region in REGION_NUTS_PAIRS
             for cutout in CUTOUTS
