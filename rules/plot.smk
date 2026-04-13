@@ -13,6 +13,16 @@ GEBCO_CFG = config.get("gebco", {})
 rule plot_GEBCO:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_GEBCO",
+            f"benchmarks/plot_GEBCO/{w.nuts}/plot_GEBCO_{w.region}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_GEBCO",
+            f"benchmarks/plot_GEBCO/{w.nuts}/plot_GEBCO_{w.region}.{w.format}.tsv",
+        )
     benchmark:
         "benchmarks/plot_GEBCO/{nuts}/plot_GEBCO_{region}.{format}.tsv"
     message:
@@ -41,6 +51,16 @@ rule plot_GEBCO:
 rule plot_ISA:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_ISA",
+            f"benchmarks/plot_ISA/{w.nuts}/{w.resolution}/plot_ISA_{w.resource}_{w.region}_{w.resolution}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_ISA",
+            f"benchmarks/plot_ISA/{w.nuts}/{w.resolution}/plot_ISA_{w.resource}_{w.region}_{w.resolution}.{w.format}.tsv",
+        )
     benchmark:
         "benchmarks/plot_ISA/{nuts}/{resolution}/plot_ISA_{resource}_{region}_{resolution}.{format}.tsv"
     message:
@@ -71,6 +91,16 @@ rule plot_ISA:
 rule plot_cutout:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_cutout",
+            f"benchmarks/plot_cutout/{w.cutout}/{w.nuts}/plot_cutout_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_cutout",
+            f"benchmarks/plot_cutout/{w.cutout}/{w.nuts}/plot_cutout_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
     benchmark:
         "benchmarks/plot_cutout/{cutout}/{nuts}/plot_cutout_{resource}_{region}_{year}.{format}.tsv"
     message:
@@ -106,6 +136,16 @@ rule plot_cutout:
 rule plot_CF:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_CF",
+            f"benchmarks/plot_CF/{w.cutout}/{w.nuts}/plot_CF_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_CF",
+            f"benchmarks/plot_CF/{w.cutout}/{w.nuts}/plot_CF_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
     benchmark:
         "benchmarks/plot_CF/{cutout}/{nuts}/plot_CF_{resource}_{region}_{year}.{format}.tsv"
     message:
@@ -147,6 +187,16 @@ rule plot_CAPACITY:
         nuts="NUTS0|NUTS2|NUTS3",
         resource="onwind|solar",
         filters=r"CFth|ISA\d+|CFth_ISA\d+",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_CAPACITY",
+            f"benchmarks/plot_CAPACITY/{w.cutout}/{w.nuts}/plot_CAPACITY_{w.filters}_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_CAPACITY",
+            f"benchmarks/plot_CAPACITY/{w.cutout}/{w.nuts}/plot_CAPACITY_{w.filters}_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
     benchmark:
         "benchmarks/plot_CAPACITY/{cutout}/{nuts}/plot_CAPACITY_{filters}_{resource}_{region}_{year}.{format}.tsv"
     message:
@@ -176,6 +226,16 @@ rule plot_CAPACITY:
 rule plot_df_CF_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_df_CF_CAPACITY",
+            f"benchmarks/plot_df_CF_CAPACITY/{w.cutout}/{w.nuts}/plot_df_CF_CAPACITY_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_df_CF_CAPACITY",
+            f"benchmarks/plot_df_CF_CAPACITY/{w.cutout}/{w.nuts}/plot_df_CF_CAPACITY_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
     benchmark:
         "benchmarks/plot_df_CF_CAPACITY/{cutout}/{nuts}/plot_df_CF_CAPACITY_{resource}_{region}_{year}.{format}.tsv"
     message:
@@ -207,6 +267,16 @@ rule plot_df_CF_CAPACITY:
 rule plot_venn_single:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_venn_single",
+            f"benchmarks/plot_venn_single/{w.cutout}/{w.nuts}/plot_venn_single_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_venn_single",
+            f"benchmarks/plot_venn_single/{w.cutout}/{w.nuts}/plot_venn_single_{w.resource}_{w.region}_{w.year}.{w.format}.tsv",
+        )
     benchmark:
         "benchmarks/plot_venn_single/{cutout}/{nuts}/plot_venn_single_{resource}_{region}_{year}.{format}.tsv"
     message:

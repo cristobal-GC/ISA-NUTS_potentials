@@ -35,6 +35,16 @@ def get_regions_for_nuts(wc):
 rule get_raster_ISA:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "get_raster_ISA",
+            f"benchmarks/get_raster_ISA/{w.nuts}/get_raster_ISA_{w.resource}_{w.region}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "get_raster_ISA",
+            f"benchmarks/get_raster_ISA/{w.nuts}/get_raster_ISA_{w.resource}_{w.region}.tsv",
+        )
     benchmark:
         "benchmarks/get_raster_ISA/{nuts}/get_raster_ISA_{resource}_{region}.tsv"
     message:
@@ -61,6 +71,16 @@ rule get_raster_ISA:
 rule get_df_ISA:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "get_df_ISA",
+            f"benchmarks/get_df_ISA/{w.nuts}/get_df_ISA_{w.resource}_{w.region}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "get_df_ISA",
+            f"benchmarks/get_df_ISA/{w.nuts}/get_df_ISA_{w.resource}_{w.region}.tsv",
+        )
     benchmark:
         "benchmarks/get_df_ISA/{nuts}/get_df_ISA_{resource}_{region}.tsv"
     message:
@@ -90,6 +110,16 @@ rule get_df_ISA:
 rule get_nc_CF:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "get_nc_CF",
+            f"benchmarks/get_nc_CF/{w.cutout}/{w.nuts}/get_nc_CF_{w.resource}_{w.region}_{w.year}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "get_nc_CF",
+            f"benchmarks/get_nc_CF/{w.cutout}/{w.nuts}/get_nc_CF_{w.resource}_{w.region}_{w.year}.tsv",
+        )
     benchmark:
         "benchmarks/get_nc_CF/{cutout}/{nuts}/get_nc_CF_{resource}_{region}_{year}.tsv"
     message:
@@ -126,6 +156,16 @@ rule get_nc_CAPACITY:
         nuts="NUTS0|NUTS2|NUTS3",
         resource="onwind|solar",
         filters=r"CFth|ISA\d+|CFth_ISA\d+",
+    threads:
+        lambda w: get_rule_threads(
+            "get_nc_CAPACITY",
+            f"benchmarks/get_nc_CAPACITY/{w.cutout}/{w.nuts}/get_nc_CAPACITY_{w.filters}_{w.resource}_{w.region}_{w.year}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "get_nc_CAPACITY",
+            f"benchmarks/get_nc_CAPACITY/{w.cutout}/{w.nuts}/get_nc_CAPACITY_{w.filters}_{w.resource}_{w.region}_{w.year}.tsv",
+        )
 
     benchmark:
         "benchmarks/get_nc_CAPACITY/{cutout}/{nuts}/get_nc_CAPACITY_{filters}_{resource}_{region}_{year}.tsv"
@@ -176,6 +216,16 @@ rule get_nc_CAPACITY:
 rule get_df_CF_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "get_df_CF_CAPACITY",
+            f"benchmarks/get_df_CF_CAPACITY/{w.cutout}/{w.nuts}/get_df_CF_CAPACITY_ISA{w.isa}_{w.resource}_{w.region}_{w.year}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "get_df_CF_CAPACITY",
+            f"benchmarks/get_df_CF_CAPACITY/{w.cutout}/{w.nuts}/get_df_CF_CAPACITY_ISA{w.isa}_{w.resource}_{w.region}_{w.year}.tsv",
+        )
     benchmark:
         "benchmarks/get_df_CF_CAPACITY/{cutout}/{nuts}/get_df_CF_CAPACITY_ISA{isa}_{resource}_{region}_{year}.tsv"
     message:
@@ -203,6 +253,16 @@ rule get_df_CF_CAPACITY:
 rule get_df_CAPACITY:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "get_df_CAPACITY",
+            f"benchmarks/get_df_CAPACITY/{w.cutout}/{w.nuts}/get_df_CAPACITY_{w.resource}_{w.region}_{w.year}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "get_df_CAPACITY",
+            f"benchmarks/get_df_CAPACITY/{w.cutout}/{w.nuts}/get_df_CAPACITY_{w.resource}_{w.region}_{w.year}.tsv",
+        )
     benchmark:
         "benchmarks/get_df_CAPACITY/{cutout}/{nuts}/get_df_CAPACITY_{resource}_{region}_{year}.tsv"
     message:
@@ -238,6 +298,16 @@ rule get_df_CAPACITY:
 rule get_df_summary:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "get_df_summary",
+            f"benchmarks/get_df_summary/{w.cutout}/{w.nuts}/get_df_summary_{w.resource}_{w.year}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "get_df_summary",
+            f"benchmarks/get_df_summary/{w.cutout}/{w.nuts}/get_df_summary_{w.resource}_{w.year}.tsv",
+        )
     benchmark:
         "benchmarks/get_df_summary/{cutout}/{nuts}/get_df_summary_{resource}_{year}.tsv"
     message:

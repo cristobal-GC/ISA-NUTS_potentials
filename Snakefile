@@ -1,6 +1,9 @@
 
+import csv
+import math
 from pathlib import Path
 import re
+from functools import lru_cache
 
 
 ########## Set default config file if it exists
@@ -86,6 +89,158 @@ FILTERS = (
 
 
 
+##### Resource limits inferred from Snakemake benchmark TSVs
+# Snakemake writes one TSV per benchmark path. Re-running the same job rewrites
+# that file; different wildcard combinations create different files.
+#
+# Resource selection in this workflow follows three tiers:
+#   1) use the exact benchmark file for the requested job if it exists,
+#   2) otherwise use the worst observed benchmark across that rule,
+#   3) otherwise fall back to a conservative static default.
+#
+# Benchmarks are not enforced as hard limits by themselves; we convert observed
+# usage into Snakemake resources with a small safety margin.
+#
+# Important: rule-level resources such as mem_mb only affect scheduling when
+# Snakemake is launched with a global resource budget, e.g.
+#   snakemake all --cores 32 --resources mem_mb=230000
+# Without --resources mem_mb=..., local execution still respects threads, but
+# mem_mb is not used to cap overall concurrency.
+
+BENCHMARK_MEM_MARGIN = 1.25
+BENCHMARK_THREADS_MARGIN = 1.10
+
+RULE_RESOURCE_DEFAULTS = {
+    "get_raster_ISA": {"threads": 1, "mem_mb": 1024},
+    "get_df_ISA": {"threads": 1, "mem_mb": 16384},
+    "get_nc_CF": {"threads": 1, "mem_mb": 16384},
+    "get_nc_CAPACITY": {"threads": 1, "mem_mb": 12288},
+    "get_df_CF_CAPACITY": {"threads": 1, "mem_mb": 4096},
+    "get_df_CAPACITY": {"threads": 1, "mem_mb": 4096},
+    "get_df_summary": {"threads": 1, "mem_mb": 4096},
+    "plot_GEBCO": {"threads": 1, "mem_mb": 2048},
+    "plot_ISA": {"threads": 1, "mem_mb": 4096},
+    "plot_cutout": {"threads": 1, "mem_mb": 4096},
+    "plot_CF": {"threads": 1, "mem_mb": 4096},
+    "plot_CAPACITY": {"threads": 1, "mem_mb": 4096},
+    "plot_df_CF_CAPACITY": {"threads": 1, "mem_mb": 2048},
+    "plot_venn_single": {"threads": 1, "mem_mb": 1024},
+    "get_tex_summary": {"threads": 1, "mem_mb": 1024},
+    "compile_tex_single": {"threads": 1, "mem_mb": 1024},
+}
+
+
+@lru_cache(maxsize=None)
+def _read_benchmark_metrics(benchmark_file):
+    # Benchmark TSVs contain a single data row with summary metrics for one job.
+    path = Path(benchmark_file)
+    if not path.exists():
+        return None
+
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle, delimiter="\t")
+        row = next(reader, None)
+
+    if row is None:
+        return None
+
+    def parse_float(field_name):
+        try:
+            value = row[field_name]
+        except KeyError:
+            return None
+
+        if value in {None, ""}:
+            return None
+
+        try:
+            return float(value)
+        except ValueError:
+            return None
+
+    return {
+        "seconds": parse_float("s"),
+        "cpu_time": parse_float("cpu_time"),
+        "max_rss": parse_float("max_rss"),
+    }
+
+
+@lru_cache(maxsize=None)
+def _collect_benchmark_metrics(rule_name):
+    # Aggregate all materialized benchmarks for one rule so new jobs can inherit
+    # a pessimistic limit even before their exact benchmark exists.
+    benchmark_dir = Path("benchmarks") / rule_name
+    if not benchmark_dir.exists():
+        return tuple()
+
+    metrics = []
+    for benchmark_file in sorted(benchmark_dir.rglob("*.tsv")):
+        benchmark_metrics = _read_benchmark_metrics(str(benchmark_file))
+        if benchmark_metrics is not None:
+            metrics.append(benchmark_metrics)
+
+    return tuple(metrics)
+
+
+def _get_rule_benchmark_metrics(rule_name, benchmark_file):
+    # Prefer the exact job benchmark. If it does not exist yet, fall back to the
+    # available history for the whole rule.
+    benchmark_metrics = _read_benchmark_metrics(benchmark_file)
+    if benchmark_metrics is not None:
+        return (benchmark_metrics,)
+
+    return _collect_benchmark_metrics(rule_name)
+
+
+def _estimate_threads_from_metrics(metrics, default_threads):
+    # Approximate effective CPU parallelism from cpu_time / wall_time.
+    seconds = metrics.get("seconds")
+    cpu_time = metrics.get("cpu_time")
+
+    if seconds is None or cpu_time is None or seconds <= 0 or cpu_time <= 0:
+        return default_threads
+
+    observed_threads = cpu_time / seconds
+    return max(1, math.ceil(observed_threads * BENCHMARK_THREADS_MARGIN))
+
+
+def _estimate_mem_mb_from_metrics(metrics, default_mem_mb):
+    # max_rss is reported in MB by Snakemake benchmark TSVs.
+    max_rss = metrics.get("max_rss")
+    if max_rss is None or max_rss <= 0:
+        return default_mem_mb
+
+    return max(1, math.ceil(max_rss * BENCHMARK_MEM_MARGIN))
+
+
+def get_rule_threads(rule_name, benchmark_file):
+    defaults = RULE_RESOURCE_DEFAULTS[rule_name]
+    benchmark_metrics = _get_rule_benchmark_metrics(rule_name, benchmark_file)
+    if not benchmark_metrics:
+        return defaults["threads"]
+
+    return max(
+        _estimate_threads_from_metrics(metrics, defaults["threads"])
+        for metrics in benchmark_metrics
+    )
+
+
+def get_rule_mem_mb(rule_name, benchmark_file):
+    defaults = RULE_RESOURCE_DEFAULTS[rule_name]
+    benchmark_metrics = _get_rule_benchmark_metrics(rule_name, benchmark_file)
+    if not benchmark_metrics:
+        return defaults["mem_mb"]
+
+    return max(
+        _estimate_mem_mb_from_metrics(metrics, defaults["mem_mb"])
+        for metrics in benchmark_metrics
+    )
+
+
+
+
+
+#################### RULES
 
 rule all:
     input:

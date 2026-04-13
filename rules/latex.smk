@@ -19,6 +19,16 @@ rule get_tex_summary:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
         resolution="HR|LR",
+    threads:
+        lambda w: get_rule_threads(
+            "get_tex_summary",
+            f"benchmarks/get_tex_summary/{w.cutout}/{w.nuts}/{w.resolution}/get_tex_summary_{w.resource}_{w.region}_{w.year}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "get_tex_summary",
+            f"benchmarks/get_tex_summary/{w.cutout}/{w.nuts}/{w.resolution}/get_tex_summary_{w.resource}_{w.region}_{w.year}.tsv",
+        )
     benchmark:
         "benchmarks/get_tex_summary/{cutout}/{nuts}/{resolution}/get_tex_summary_{resource}_{region}_{year}.tsv"
     message:
@@ -74,6 +84,16 @@ rule compile_tex_single:
     wildcard_constraints:
         nuts="NUTS0|NUTS2|NUTS3",
         resolution="HR|LR",
+    threads:
+        lambda w: get_rule_threads(
+            "compile_tex_single",
+            f"benchmarks/compile_tex_single/{w.cutout}/{w.nuts}/{w.resolution}/compile_tex_single_{w.resource}_{w.region}_{w.year}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "compile_tex_single",
+            f"benchmarks/compile_tex_single/{w.cutout}/{w.nuts}/{w.resolution}/compile_tex_single_{w.resource}_{w.region}_{w.year}.tsv",
+        )
     benchmark:
         "benchmarks/compile_tex_single/{cutout}/{nuts}/{resolution}/compile_tex_single_{resource}_{region}_{year}.tsv"
     message:
