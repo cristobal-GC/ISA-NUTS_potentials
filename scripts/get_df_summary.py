@@ -157,34 +157,34 @@ def load_metric_by_region(file_path, value_col):
 
 if nuts in {"NUTS0", "NUTS2"}:
     esios_dir = Path("data/esios")
-    file_demand_2024 = esios_dir / f"electricity_demand_2024_{nuts}.csv"
-    file_installed_2024 = esios_dir / f"esios_onwind_capacity_2024_{nuts}.csv"
+    file_demand_2025 = esios_dir / f"electricity_demand_2025_{nuts}.csv"
+    file_installed_2025 = esios_dir / f"esios_onwind_capacity_2025_{nuts}.csv"
 
-    if not file_demand_2024.exists():
+    if not file_demand_2025.exists():
         raise FileNotFoundError(
-            f"Required demand file for {nuts} not found: {file_demand_2024}"
+            f"Required demand file for {nuts} not found: {file_demand_2025}"
         )
 
-    demand_by_region = load_metric_by_region(file_demand_2024, "demand_2024")
-    summary_df["DEMAND_2024"] = [
+    demand_by_region = load_metric_by_region(file_demand_2025, "demand_2025")
+    summary_df["DEMAND_2025"] = [
         round(float(demand_by_region.get(region, 0.0)), 6) for region in summary_df.index
     ]
 
     if resource == "onwind":
-        if not file_installed_2024.exists():
+        if not file_installed_2025.exists():
             raise FileNotFoundError(
-                f"Required installed capacity file for {nuts} not found: {file_installed_2024}"
+                f"Required installed capacity file for {nuts} not found: {file_installed_2025}"
             )
-        installed_by_region = load_metric_by_region(file_installed_2024, "wind_capacity")
-        summary_df["installed_2024"] = [
+        installed_by_region = load_metric_by_region(file_installed_2025, "wind_capacity")
+        summary_df["installed_2025"] = [
             round(float(installed_by_region.get(region, 0.0)), 6) for region in summary_df.index
         ]
     else:
-        summary_df["installed_2024"] = 0.0
+        summary_df["installed_2025"] = 0.0
 
-    summary_df["GENERATION_CFth_ISA4_perc_DEMAND_2024"] = [
-        round((summary_df.loc[region, "GENERATION_CFth_ISA4"] / summary_df.loc[region, "DEMAND_2024"]) * 100, 6)
-        if summary_df.loc[region, "DEMAND_2024"] > 0
+    summary_df["GENERATION_CFth_ISA4_perc_DEMAND_2025"] = [
+        round((summary_df.loc[region, "GENERATION_CFth_ISA4"] / summary_df.loc[region, "DEMAND_2025"]) * 100, 6)
+        if summary_df.loc[region, "DEMAND_2025"] > 0
         else 0.0
         for region in summary_df.index
     ]

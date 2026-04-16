@@ -166,14 +166,14 @@ def main() -> None:
     potcap_mw = row.get("CAPACITY_CFth_ISA4")
     potcap_gw = float(potcap_mw) / 1000 if pd.notna(potcap_mw) else None
 
-    pot_actual_mw = get_row_value(row, ["installed_2024"])
+    pot_actual_mw = get_row_value(row, ["installed_2025"])
     pot_actual = float(pot_actual_mw) / 1000.0 if pd.notna(pot_actual_mw) else None
     potene_twh = get_row_value(row, ["GENERATION_CFth_ISA4", "gen_CFth_ISA4", "ENERGY_potential_TWh"])
     perc_demand = get_row_value(
         row,
-        ["GENERATION_CFth_ISA4_perc_DEMAND_2024", "gen_CFth_ISA4_perc_demand_2024", "perc_demand"],
+        ["GENERATION_CFth_ISA4_perc_DEMAND_2025", "gen_CFth_ISA4_perc_demand_2025", "perc_demand"],
     )
-    demand_2024 = get_row_value(row, ["DEMAND_2024", "demand_2024"])
+    demand_2025 = get_row_value(row, ["DEMAND_2025", "demand_2025"])
 
     region_name = read_region_name(nuts_geojson, args.region)
 
@@ -203,16 +203,16 @@ def main() -> None:
         pot_actual_str = format_number(pot_actual, decimals=2)
         potene_str = format_number(potene_twh, decimals=2)
         perc_demand_str = format_number(perc_demand, decimals=0)
-        demand_2024_str = format_number(demand_2024, decimals=2)
+        demand_2025_str = format_number(demand_2025, decimals=2)
 
         installed_note = (
-            f"{{\\color{{gris}} Installed wind power capacity in {region_name} in 2024 was "
+            f"{{\\color{{gris}} Installed wind power capacity in {region_name} in 2025 was "
             f"\\textbf{{{pot_actual_str} GW}}.}} \\vspace{{0.4cm}}"
         )
         energy_note = (
             f"\\item \\texttt{{\\textbf{{ENERGY:}}}} {{\\color{{low}}\\textbf{{{potene_str} TWh}}}} could be generated with this potential capacity.\n"
             f"\n"
-            f"        {{\\color{{gris}} This represents around \\textbf{{{perc_demand_str}\\%}} of the actual electricity demand in the region ({demand_2024_str} TWh).}}"
+            f"        {{\\color{{gris}} This represents around \\textbf{{{perc_demand_str}\\%}} of the actual electricity demand in the region ({demand_2025_str} TWh).}}"
         )
     else:
         installed_note = "% Installed capacity note omitted for this NUTS level"
