@@ -28,5 +28,8 @@ venv/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# VS Code workspace settings
+.vscode/
+
 
 

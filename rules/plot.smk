@@ -328,3 +328,37 @@ rule plot_potential_comparison:
         map_potential_comparison="results/maps/potential_comparison/{cutout}/{nuts}/potential_comparison_{resource}_{year}.{format}"
     script:
         "../scripts/plot_potential_comparison.py"
+
+
+
+#################### plot_NUTS
+#
+# Wildcards:
+#   - nuts       [NUTS2, NUTS3]
+#   - format     [png, pdf]
+
+rule plot_NUTS:
+    wildcard_constraints:
+        nuts="NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_NUTS",
+            f"benchmarks/plot_NUTS/{w.nuts}/plot_NUTS_{w.nuts}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_NUTS",
+            f"benchmarks/plot_NUTS/{w.nuts}/plot_NUTS_{w.nuts}.{w.format}.tsv",
+        )
+    benchmark:
+        "benchmarks/plot_NUTS/{nuts}/plot_NUTS_{nuts}.{format}.tsv"
+    message:
+        "... [plot_NUTS] Plotting NUTS boundaries for nuts: {wildcards.nuts}, format: {wildcards.format}."
+    params:
+        fig_params=config["fig_params"]
+    input:
+        gdf_NUTS="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson"
+    output:
+        map_NUTS="results/maps/NUTS/{nuts}/NUTS_{nuts}.{format}"
+    script:
+        "../scripts/plot_NUTS.py"

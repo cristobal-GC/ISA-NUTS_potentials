@@ -126,8 +126,14 @@ RULE_RESOURCE_DEFAULTS = {
     "plot_df_CF_CAPACITY": {"threads": 1, "mem_mb": 2048},
     "plot_venn_single": {"threads": 1, "mem_mb": 1024},
     "plot_potential_comparison": {"threads": 1, "mem_mb": 2048},
+    "plot_NUTS": {"threads": 1, "mem_mb": 1024},
     "get_tex_summary": {"threads": 1, "mem_mb": 1024},
-    "compile_tex_single": {"threads": 1, "mem_mb": 1024},
+    "compile_tex_summary": {"threads": 1, "mem_mb": 1024},
+    "get_tex_NUTS": {"threads": 1, "mem_mb": 1024},
+    "compile_tex_NUTS": {"threads": 1, "mem_mb": 1024},
+    "get_tex_cover": {"threads": 1, "mem_mb": 1024},
+    "compile_tex_cover": {"threads": 1, "mem_mb": 1024},
+    "get_tex_DECK": {"threads": 1, "mem_mb": 1024},
 }
 
 
@@ -283,6 +289,36 @@ rule all:
         ],
 
         [
+            f"results/maps/NUTS/{nuts}/NUTS_{nuts}.{fmt}"
+            for nuts in ["NUTS2", "NUTS3"]
+            for fmt in FORMATS
+        ],
+
+        [
+            f"results/LaTex/{cutout}/{year}/{resource}/{nuts}/NUTS_{nuts}.pdf"
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for nuts in ["NUTS2", "NUTS3"]
+        ],
+
+        [
+            f"results/LaTex/{cutout}/{year}/{resource}/{nuts}/cover_{nuts}.pdf"
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for nuts in ["NUTS2", "NUTS3"]
+        ],
+
+        [
+            f"results/LaTex/{cutout}/{year}/{resource}/{nuts}/DECK_{nuts}.pdf"
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for nuts in ["NUTS2", "NUTS3"]
+        ],
+
+        [
             f"results/LaTex/{cutout}/{year}/{resource}/{nuts}/summary_{region}_{resolution}.pdf"
             for nuts, region in REGION_NUTS_PAIRS
             for cutout in CUTOUTS
@@ -358,21 +394,30 @@ rule plot_potential_comparisons:
         ]
 
 
+rule plot_NUTSs:
+    input:
+        [
+            f"results/maps/NUTS/{nuts}/NUTS_{nuts}.{fmt}"
+            for nuts in ["NUTS2", "NUTS3"]
+            for fmt in FORMATS
+        ]
 
-rule dag:
-    message:
-        "... Generating workflow DAG (PNG, PDF, SVG)"
-    output:
-        "DAG/dag.png",
-        "DAG/dag.pdf",
-        "DAG/dag.svg"
-    shell:
-        (
-            "mkdir -p DAG && "
-            "snakemake --dag --nolock | dot -Tpng -o {output[0]} && "
-            "snakemake --dag --nolock | dot -Tpdf -o {output[1]} && "
-            "snakemake --dag --nolock | dot -Tsvg -o {output[2]}"
-        )
+
+
+# rule dag:
+#     message:
+#         "... Generating workflow DAG (PNG, PDF, SVG)"
+#     output:
+#         "DAG/dag.png",
+#         "DAG/dag.pdf",
+#         "DAG/dag.svg"
+#     shell:
+#         (
+#             "mkdir -p DAG && "
+#             "snakemake --dag --nolock | dot -Tpng -o {output[0]} && "
+#             "snakemake --dag --nolock | dot -Tpdf -o {output[1]} && "
+#             "snakemake --dag --nolock | dot -Tsvg -o {output[2]}"
+#         )
 
 
 rule rulegraph:
@@ -391,20 +436,20 @@ rule rulegraph:
         )
 
 
-rule filegraph:
-    message:
-        "... Generating workflow rule graph (PNG, PDF, SVG)"
-    output:
-        "DAG/filegraph.png",
-        "DAG/filegraph.pdf",
-        "DAG/filegraph.svg"
-    shell:
-        (
-            "mkdir -p DAG && "
-            "snakemake --filegraph --nolock | dot -Tpng -o {output[0]} && "
-            "snakemake --filegraph --nolock | dot -Tpdf -o {output[1]} && "
-            "snakemake --filegraph --nolock | dot -Tsvg -o {output[2]}"
-        )
+# rule filegraph:
+#     message:
+#         "... Generating workflow rule graph (PNG, PDF, SVG)"
+#     output:
+#         "DAG/filegraph.png",
+#         "DAG/filegraph.pdf",
+#         "DAG/filegraph.svg"
+#     shell:
+#         (
+#             "mkdir -p DAG && "
+#             "snakemake --filegraph --nolock | dot -Tpng -o {output[0]} && "
+#             "snakemake --filegraph --nolock | dot -Tpdf -o {output[1]} && "
+#             "snakemake --filegraph --nolock | dot -Tsvg -o {output[2]}"
+#         )
 
 
      

@@ -297,6 +297,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.19.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyogrio-0.12.1-py313hae45665_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.3.2-pyhcf101f3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pypdf-6.10.1-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyproj-3.7.2-py313h77f6078_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyshp-3.0.3-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyside6-6.10.1-py313h85046ba_0.conda
@@ -4153,6 +4154,17 @@ packages:
   license_family: MIT
   size: 110893
   timestamp: 1769003998136
+- conda: https://conda.anaconda.org/conda-forge/noarch/pypdf-6.10.1-pyhcf101f3_0.conda
+  sha256: 78351a3893a006b6f46616b449899ad4e0672534a336aeff06e95cf95bb4494c
+  md5: 42d4278ae15d2dc9857b098825faf7ed
+  depends:
+  - python >=3.10
+  - typing_extensions >=4.0
+  - python
+  license: BSD-3-Clause
+  license_family: BSD
+  size: 275203
+  timestamp: 1776174602718
 - conda: https://conda.anaconda.org/conda-forge/linux-64/pyproj-3.7.2-py313h77f6078_2.conda
   sha256: a37cabb43cf5d73bacd0c20856374561dde9f0025c4a189593d961057ba4a17d
   md5: 42d11c7d1ac21ae2085f58353641e71c

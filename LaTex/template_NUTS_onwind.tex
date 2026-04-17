@@ -1,0 +1,51 @@
+\documentclass{article}
+
+\usepackage{lmodern}
+
+\usepackage[a4paper]{geometry}
+\usepackage{graphicx}
+\usepackage[absolute,overlay]{textpos}
+\usepackage[colorlinks=true, urlcolor=azul]{hyperref}
+
+\usepackage[most]{tcolorbox}
+
+\usepackage{xcolor}
+
+\definecolor{low}{HTML}{1a9850}
+\definecolor{marron}{HTML}{8B4513}
+\definecolor{gris}{HTML}{555555}
+\definecolor{fondo}{HTML}{F0FAF0}
+\definecolor{azul}{HTML}{0c73ad}
+\definecolor{rojillo}{HTML}{d86b6b}
+
+\geometry{
+  paperwidth=33.6cm,
+  paperheight=21cm,
+  left=0cm,
+  top=0cm,
+  right=0cm,
+  bottom=0cm
+}
+
+\begin{document}
+\pagestyle{empty}
+
+\begin{textblock*}{11.5cm}(2.5cm,3cm)
+\large
+\noindent \textbf{Summary of main hypotheses}:
+\begin{itemize}
+\item The environmental sensitivity assessment is based on the ISA index performed by MITECO \href{https://www.miteco.gob.es/en/calidad-y-evaluacion-ambiental/temas/evaluacion-ambiental/zonificacion_ambiental_energias_renovables.html}{(link)}. Here, the potential in ``Low sensitivity'' areas, corresponding to the lowest of the five defined ISA classes, is estimated. However, low sensitivity does not imply that an environmental impact assessment is unnecessary for wind farm development. Wind farms may also be located in other ISA classes following a preliminary environmental impact assessment.
+\item Wind resource from CUTOUT, wind speed at 100 m height, year YEAR.
+\item Software: \href{https://github.com/PyPSA/atlite}{atlite}
+\item Wind power density: CAPPERSQKM MW/km$^2$
+\item Power curve from wind turbine model: TURBINEMODEL.
+\item Correction factor to account for wind farm losses: CORRECTIONFACTOR
+\item Capacity factor threshold: THRESHOLD ($\sim$EQUIVHOURS equiv. hours)
+\end{itemize}
+\end{textblock*}
+
+\begin{textblock*}{\textwidth}(16cm,0cm)
+{\includegraphics[width=15cm]{ROOTPATH/results/maps/NUTS/NUTSLEVEL/NUTS_NUTSLEVEL.pdf}}
+\end{textblock*}
+
+\end{document}

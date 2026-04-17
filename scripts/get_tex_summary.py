@@ -118,7 +118,7 @@ def main() -> None:
     parser.add_argument(
         "--template",
         default=None,
-        help="Path to LaTeX template. Defaults to <project-root>/LaTex/template.tex",
+        help="Path to LaTeX template. Defaults to <project-root>/LaTex/template_summary.tex",
     )
     parser.add_argument(
         "--config",
@@ -137,7 +137,7 @@ def main() -> None:
     template_file = (
         Path(args.template).expanduser().resolve()
         if args.template
-        else project_root / "LaTex" / "template.tex"
+        else project_root / "LaTex" / "template_summary.tex"
     )
     config_file = (
         Path(args.config).expanduser().resolve()
@@ -184,7 +184,7 @@ def main() -> None:
         "CODIGONUTS": args.region,
         "RESOLUTION": resolution,
         "FIGEXT": fig_ext,
-        "THRESHOLD": format_number(threshold, decimals=2),
+        "THRESHOLD": format_number(threshold, decimals=3),
         "CUTOUT": args.cutout,
         "ROOTPATH": str(project_root),
         "RESOURCE": args.resource,
