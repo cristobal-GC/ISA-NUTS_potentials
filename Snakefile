@@ -125,6 +125,7 @@ RULE_RESOURCE_DEFAULTS = {
     "plot_CAPACITY": {"threads": 1, "mem_mb": 4096},
     "plot_df_CF_CAPACITY": {"threads": 1, "mem_mb": 2048},
     "plot_venn_single": {"threads": 1, "mem_mb": 1024},
+    "plot_potential_comparison": {"threads": 1, "mem_mb": 2048},
     "get_tex_summary": {"threads": 1, "mem_mb": 1024},
     "compile_tex_single": {"threads": 1, "mem_mb": 1024},
 }
@@ -267,6 +268,15 @@ rule all:
         ],
 
         [
+            f"results/maps/potential_comparison/{cutout}/{nuts}/potential_comparison_{resource}_{year}.{fmt}"
+            for nuts in sorted({n for n, _ in REGION_NUTS_PAIRS if n in {"NUTS2", "NUTS3"}})
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ],
+
+        [
             f"results/maps/GEBCO/{nuts}/GEBCO_{region}.{fmt}"
             for nuts, region in REGION_NUTS_PAIRS
             for fmt in FORMATS
@@ -329,6 +339,18 @@ rule plot_CFs:
         [
             f"results/maps/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.{fmt}"
             for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ]
+
+
+rule plot_potential_comparisons:
+    input:
+        [
+            f"results/maps/potential_comparison/{cutout}/{nuts}/potential_comparison_{resource}_{year}.{fmt}"
+            for nuts in sorted({n for n, _ in REGION_NUTS_PAIRS if n in {"NUTS2", "NUTS3"}})
             for cutout in CUTOUTS
             for year in YEARS
             for resource in RESOURCES

@@ -289,3 +289,42 @@ rule plot_venn_single:
         plot_venn="results/figs/venn/{cutout}/{nuts}/venn_{resource}_{region}_{year}.{format}"
     script:
         "../scripts/plot_venn_single.py"
+
+
+
+#################### plot_potential_comparison
+#
+# Wildcards:
+#   - cutout     [era5, ...]
+#   - nuts       [NUTS2, NUTS3]
+#   - resource   [onwind, solar]
+#   - year       [2013, ...]
+#   - format     [png, pdf]
+
+rule plot_potential_comparison:
+    wildcard_constraints:
+        nuts="NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_potential_comparison",
+            f"benchmarks/plot_potential_comparison/{w.cutout}/{w.nuts}/plot_potential_comparison_{w.resource}_{w.year}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_potential_comparison",
+            f"benchmarks/plot_potential_comparison/{w.cutout}/{w.nuts}/plot_potential_comparison_{w.resource}_{w.year}.{w.format}.tsv",
+        )
+    benchmark:
+        "benchmarks/plot_potential_comparison/{cutout}/{nuts}/plot_potential_comparison_{resource}_{year}.{format}.tsv"
+    message:
+        "... [plot_potential_comparison] Plotting potential density comparison map for cutout: {wildcards.cutout}, nuts: {wildcards.nuts}, year: {wildcards.year}, resource: {wildcards.resource}, format: {wildcards.format}."
+    params:
+        fig_params=config["fig_params"],
+        CF_threshold=lambda w: config["CF_params"][w.resource]["CF_threshold"]
+    input:
+        gdf_NUTS="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
+        df_summary="results/dfs/summary/{cutout}/{nuts}/df_summary_{resource}_{year}.csv"
+    output:
+        map_potential_comparison="results/maps/potential_comparison/{cutout}/{nuts}/potential_comparison_{resource}_{year}.{format}"
+    script:
+        "../scripts/plot_potential_comparison.py"
