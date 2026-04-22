@@ -81,6 +81,7 @@ legend_elements = [
 size = fig_params["sizes"][resolution]["size"]
 linewidth = fig_params["sizes"][resolution]["linewidth"]
 fontsize = fig_params["sizes"][resolution]["fontsize"]
+dpi = fig_params["sizes"][resolution]["dpi"]
 
 ##### Make plot
 fig, ax = plt.subplots(figsize=(size, size))
@@ -134,6 +135,7 @@ ax.set_yticks([])
 ##### Save figure
 fig.savefig(file_map_ISA,
             bbox_inches="tight",
-            pad_inches=0.2)  
+            pad_inches=0.2,
+            dpi=dpi)  
 
 plt.close(fig)

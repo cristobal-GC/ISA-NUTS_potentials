@@ -177,5 +177,6 @@ ax.set_axis_off()
 
 Path(file_map_nuts).parent.mkdir(parents=True, exist_ok=True)
 plt.tight_layout()
-fig.savefig(file_map_nuts, bbox_inches="tight", pad_inches=0.2)
+dpi = fig_params["sizes"]["LR"]["dpi"]
+fig.savefig(file_map_nuts, bbox_inches="tight", pad_inches=0.2, dpi=dpi)
 plt.close(fig)

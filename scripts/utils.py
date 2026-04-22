@@ -509,6 +509,8 @@ def plot_dataarray_on_map(
     size=12,
     linewidth=1.5,
     fontsize=16,
+    *,
+    dpi,
     title=None,
     bounds_type="gdf"
 ):
@@ -545,6 +547,8 @@ def plot_dataarray_on_map(
         NUTS boundary linewidth, by default 1.5
     fontsize : int, optional
         Font size for labels, by default 16
+    dpi : int
+        Output resolution in dots per inch. Must be provided explicitly.
     title : str, optional
         Plot title, by default None
     bounds_type : str, optional
@@ -646,7 +650,7 @@ def plot_dataarray_on_map(
         ax.set_title("")  # Clear any auto-generated title from xarray
     
     ##### Save figure
-    fig.savefig(file_output, bbox_inches="tight", pad_inches=0.2)
+    fig.savefig(file_output, bbox_inches="tight", pad_inches=0.2, dpi=dpi)
     plt.close(fig)
     
     _log_and_print(f"[plot_dataarray_on_map] Saved plot to {file_output}")

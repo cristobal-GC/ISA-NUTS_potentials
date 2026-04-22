@@ -1,0 +1,29 @@
+\documentclass{article}
+
+\usepackage{lmodern}
+
+\usepackage[a4paper]{geometry}
+\usepackage{graphicx}
+
+\geometry{
+  paperwidth=33.6cm,
+  paperheight=21cm,
+  left=1cm,
+  top=1cm,
+  right=1cm,
+  bottom=1cm
+}
+
+\begin{document}
+\pagestyle{empty}
+
+\newlength{\vennimageheight}
+% Reserve vertical space for the title and spacing so figure + title always fit on one page.
+\setlength{\vennimageheight}{\dimexpr\textheight-1.6cm\relax}
+
+\centering
+{\LARGE \textbf{Venn's diagrams}}\\[0.4cm]
+\includegraphics[width=\textwidth,height=\vennimageheight,keepaspectratio]%
+  {ROOTPATH/results/figs/venn_all/CUTOUTNAME/NUTSLEVEL/venn_all_RESOURCE_YEAR.pdf}
+
+\end{document}

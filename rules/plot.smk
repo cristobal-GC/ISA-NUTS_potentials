@@ -292,6 +292,46 @@ rule plot_venn_single:
 
 
 
+#################### plot_venn_all
+#
+# Wildcards:
+#   - cutout     [era5, ...]
+#   - nuts       [NUTS2, NUTS3]
+#   - resource   [onwind, solar]
+#   - year       [2013, ...]
+#   - format     [png, pdf]
+
+rule plot_venn_all:
+    wildcard_constraints:
+        nuts="NUTS2|NUTS3",
+    threads:
+        lambda w: get_rule_threads(
+            "plot_venn_all",
+            f"benchmarks/plot_venn_all/{w.cutout}/{w.nuts}/plot_venn_all_{w.resource}_{w.year}.{w.format}.tsv",
+        )
+    resources:
+        mem_mb=lambda w: get_rule_mem_mb(
+            "plot_venn_all",
+            f"benchmarks/plot_venn_all/{w.cutout}/{w.nuts}/plot_venn_all_{w.resource}_{w.year}.{w.format}.tsv",
+        )
+    benchmark:
+        "benchmarks/plot_venn_all/{cutout}/{nuts}/plot_venn_all_{resource}_{year}.{format}.tsv"
+    message:
+        "... [plot_venn_all] Plotting combined Venn diagrams for cutout: {wildcards.cutout}, nuts: {wildcards.nuts}, year: {wildcards.year}, resource: {wildcards.resource}, format: {wildcards.format}."
+    params:
+        fig_params=config["fig_params"],
+        regions=lambda w: [r for n, r in REGION_NUTS_PAIRS if n == w.nuts],
+        CF_threshold=lambda w: config["CF_params"][w.resource]["CF_threshold"]
+    input:
+        gdf_NUTS="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
+        df_summary="results/dfs/summary/{cutout}/{nuts}/df_summary_{resource}_{year}.csv"
+    output:
+        plot_venn_all="results/figs/venn_all/{cutout}/{nuts}/venn_all_{resource}_{year}.{format}"
+    script:
+        "../scripts/plot_venn_all.py"
+
+
+
 #################### plot_potential_comparison
 #
 # Wildcards:

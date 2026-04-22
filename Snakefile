@@ -125,6 +125,7 @@ RULE_RESOURCE_DEFAULTS = {
     "plot_CAPACITY": {"threads": 1, "mem_mb": 4096},
     "plot_df_CF_CAPACITY": {"threads": 1, "mem_mb": 2048},
     "plot_venn_single": {"threads": 1, "mem_mb": 1024},
+    "plot_venn_all": {"threads": 1, "mem_mb": 2048},
     "plot_potential_comparison": {"threads": 1, "mem_mb": 2048},
     "plot_NUTS": {"threads": 1, "mem_mb": 1024},
     "get_tex_summary": {"threads": 1, "mem_mb": 1024},
@@ -134,6 +135,10 @@ RULE_RESOURCE_DEFAULTS = {
     "get_tex_cover": {"threads": 1, "mem_mb": 1024},
     "compile_tex_cover": {"threads": 1, "mem_mb": 1024},
     "get_tex_DECK": {"threads": 1, "mem_mb": 1024},
+    "get_tex_Venn": {"threads": 1, "mem_mb": 1024},
+    "get_tex_table_ISA": {"threads": 1, "mem_mb": 1024},
+    "get_tex_table_summary": {"threads": 1, "mem_mb": 1024},
+    "compile_tex_Venn": {"threads": 1, "mem_mb": 1024},
 }
 
 
@@ -274,6 +279,15 @@ rule all:
         ],
 
         [
+            f"results/figs/venn_all/{cutout}/{nuts}/venn_all_{resource}_{year}.{fmt}"
+            for nuts in sorted({n for n, _ in REGION_NUTS_PAIRS if n in {"NUTS2", "NUTS3"}})
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ],
+
+        [
             f"results/maps/potential_comparison/{cutout}/{nuts}/potential_comparison_{resource}_{year}.{fmt}"
             for nuts in sorted({n for n, _ in REGION_NUTS_PAIRS if n in {"NUTS2", "NUTS3"}})
             for cutout in CUTOUTS
@@ -312,6 +326,28 @@ rule all:
 
         [
             f"results/LaTex/{cutout}/{year}/{resource}/{nuts}/DECK_{nuts}.pdf"
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for nuts in ["NUTS2", "NUTS3"]
+        ],
+
+        [
+            f"results/LaTex/{cutout}/{year}/{resource}/{nuts}/Venn_{nuts}.pdf"
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for nuts in ["NUTS2", "NUTS3"]
+        ],
+
+        [
+            f"results/LaTex/tables/ISA/{nuts}/table_ISA_{resource}_{nuts}.tex"
+            for nuts in ["NUTS2", "NUTS3"]
+            for resource in RESOURCES
+        ],
+
+        [
+            f"results/LaTex/tables/summary/{cutout}/{year}/{resource}/{nuts}/table_summary_{resource}_{nuts}.tex"
             for cutout in CUTOUTS
             for year in YEARS
             for resource in RESOURCES
@@ -375,6 +411,18 @@ rule plot_CFs:
         [
             f"results/maps/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.{fmt}"
             for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ]
+
+
+rule plot_venn_alls:
+    input:
+        [
+            f"results/figs/venn_all/{cutout}/{nuts}/venn_all_{resource}_{year}.{fmt}"
+            for nuts in sorted({n for n, _ in REGION_NUTS_PAIRS if n in {"NUTS2", "NUTS3"}})
             for cutout in CUTOUTS
             for year in YEARS
             for resource in RESOURCES

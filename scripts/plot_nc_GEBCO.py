@@ -81,6 +81,7 @@ resolution = "LR"
 size = fig_params["sizes"][resolution]["size"]
 linewidth = fig_params["sizes"][resolution]["linewidth"]
 fontsize = fig_params["sizes"][resolution]["fontsize"]
+dpi = fig_params["sizes"][resolution]["dpi"]
 
 # Reuse the classic terrain palette while removing the initial blue segment,
 # so the scale starts at green and keeps yellow-brown-white at higher values.
@@ -108,6 +109,7 @@ plot_dataarray_on_map(
     size=size,
     linewidth=linewidth,
     fontsize=fontsize,
+    dpi=dpi,
     title=None,
     bounds_type="gdf"
 )

@@ -137,6 +137,7 @@ ax.set_aspect("equal", "box")
 ax.axis("off")
 
 fontsize = fig_params["sizes"]["LR"]["fontsize"]
+dpi = fig_params["sizes"]["LR"]["dpi"]
 
 legend_isa4 = mpatches.Patch(color=color_isa4, alpha=alpha, label=r"$P_{_{\mathrm{ISA4}}}$")
 legend_cfth = mpatches.Patch(color=color_cfth, alpha=alpha, label=r"$P^{^{\mathit{CF}^*}}$")
@@ -156,5 +157,5 @@ plt.tight_layout(rect=[0, 0, 1, 0.95])
 
 ############################## Save output
 
-fig.savefig(file_plot, bbox_inches="tight", pad_inches=0.05)
+fig.savefig(file_plot, bbox_inches="tight", pad_inches=0.05, dpi=dpi)
 plt.close(fig)

@@ -140,10 +140,12 @@ fig_params:
       size: 12
       linewidth: 1.5
       fontsize: 16
+      dpi: 300
     HR:
       size: 36
       linewidth: 4.5
       fontsize: 48
+      dpi: 300
   cutout:
     onwind:
       cmap: viridis

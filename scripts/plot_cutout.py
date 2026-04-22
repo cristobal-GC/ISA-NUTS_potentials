@@ -59,6 +59,7 @@ resolution = 'LR'   # Always Low Resolution
 size = fig_params["sizes"][resolution]["size"]
 linewidth = fig_params["sizes"][resolution]["linewidth"]
 fontsize = fig_params["sizes"][resolution]["fontsize"]
+dpi = fig_params["sizes"][resolution]["dpi"]
 
 cmap = fig_params['cutout'][resource]['cmap']
 units = fig_params['cutout'][resource]['units']
@@ -80,6 +81,7 @@ plot_dataarray_on_map(
     size=size,
     linewidth=linewidth,
     fontsize=fontsize,
+    dpi=dpi,
     #title=
     bounds_type="gdf"
 )

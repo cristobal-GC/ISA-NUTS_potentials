@@ -35,6 +35,7 @@ labels = fig_params["ISA"]["labels"]
 
 size = fig_params["sizes"]["LR"]["size"]
 fontsize = fig_params["sizes"]["LR"]["fontsize"]
+dpi = fig_params["sizes"]["LR"]["dpi"]
 
 fig, ax = plt.subplots(figsize=(size, size/2))
 
@@ -68,5 +69,5 @@ ax.tick_params(axis='both', labelsize=fontsize)
 plt.grid(True, which="both", linestyle="--", linewidth=1., color="gray", alpha=0.3)
 
 ##### Save figure
-fig.savefig(file_plot, bbox_inches="tight", pad_inches=0.2)
+fig.savefig(file_plot, bbox_inches="tight", pad_inches=0.2, dpi=dpi)
 plt.close(fig)
