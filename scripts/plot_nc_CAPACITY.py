@@ -46,6 +46,14 @@ dpi = fig_params["sizes"][resolution]["dpi"]
 cmap = fig_params['CAPACITY'][resource]['cmap']
 units = fig_params['CAPACITY'][resource]['units']
 
+total_capacity_mw = CAPACITY.sum().values.item()
+if total_capacity_mw > 1000:
+    total_capacity_value = total_capacity_mw / 1000
+    total_capacity_unit = "GW"
+else:
+    total_capacity_value = total_capacity_mw
+    total_capacity_unit = "MW"
+
 
 ##### Make plot
 plot_dataarray_on_map(
@@ -64,6 +72,6 @@ plot_dataarray_on_map(
     linewidth=linewidth,
     fontsize=fontsize,
     dpi=dpi,
-    title=f"Total capacity: {CAPACITY.sum().values.item():.2f} MW",
+    title=f"Total capacity: {total_capacity_value:.2f} {total_capacity_unit}",
     bounds_type="gdf"
 )
