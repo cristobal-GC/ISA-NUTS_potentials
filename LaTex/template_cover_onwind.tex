@@ -1,32 +1,27 @@
 \documentclass{article}
 
-\usepackage{lmodern}  % fuente escalable
+\usepackage{lmodern}  % scalable font
 
-\usepackage[a4paper]{geometry} % para orientacion horizontal
-\usepackage{graphicx}  % para incluir imagenes
-\usepackage[absolute,overlay]{textpos} % para posicionamiento absoluto
+\usepackage[a4paper]{geometry} % landscape orientation
+\usepackage{graphicx}  % to include images
+\usepackage[absolute,overlay]{textpos} % for absolute positioning
 
 \usepackage[most]{tcolorbox}
 
 
-\usepackage[colorlinks=true,linkcolor=azulon,citecolor=azulon,urlcolor=verdoso]{hyperref}
+\usepackage[colorlinks=true,linkcolor=titleblue,citecolor=titleblue,urlcolor=linkgreen]{hyperref}
 
 
 \usepackage{xcolor}
 
 \definecolor{low}{HTML}{1a9850}
-\definecolor{marron}{HTML}{8B4513}
-\definecolor{gris}{HTML}{555555} % {808080}
-\definecolor{fondo}{HTML}{F0FAF0}
-\definecolor{rojillo}{HTML}{d86b6b}
 
 
-\definecolor{azulon}{rgb}{0.0471, 0.4510, 0.6784}
-\definecolor{verdoso}{rgb}{0.1,0.4,0.1}
-\definecolor{violet}{rgb}{0.8,0.2,1}
+\definecolor{titleblue}{rgb}{0.0471, 0.4510, 0.6784}
+\definecolor{linkgreen}{rgb}{0.1,0.4,0.1}
 
 
-% Configuracion de la pagina: 26cm x 15cm
+% Page setup
 \geometry{
   paperwidth=33.6cm,
   paperheight=21cm,
@@ -37,17 +32,17 @@
 }
 
 \begin{document}
-\pagestyle{empty} % sin numero de pagina
+\pagestyle{empty} % no page number
 
 
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Sello supplementary materials
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Supplementary materials stamp
 \begin{textblock*}{26.0cm}(2cm,3.5cm)
-\begin{tcolorbox}[colback=white,colframe=azulon,boxrule=0.5pt,arc=5pt,left=0pt,right=15pt,top=15pt,bottom=15pt]
+\begin{tcolorbox}[colback=white,colframe=titleblue,boxrule=0.5pt,arc=5pt,left=0pt,right=15pt,top=15pt,bottom=15pt]
 \Huge
-{\color{azulon}
+{\color{titleblue}
   \texttt{~Supplementary materials: Results at NUTS {NUTS} level}
 }
 \end{tcolorbox}
@@ -56,10 +51,10 @@
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Titulo
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Title
 
 \begin{textblock*}{\textwidth}(2cm,8cm)
-  {\color{azulon}
+  {\color{titleblue}
   \parbox{27cm}{
     \fontsize{35}{50}\selectfont
     Wind power potential in low environmental sensitivity
@@ -68,7 +63,7 @@
 \end{textblock*}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Autores
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Authors
 \begin{textblock*}{25cm}(2.5cm,12cm)
 \LARGE
 \noindent Cristobal Gallego-Castillo$^1$, Fidel Gonzalez-Rouco$^2$, Alvaro Cuerva-Tejero$^1$, Elena Garcia-Bustamante$^3$, Oscar Lopez-Garcia$^1$, Jorge Navarro$^3$
@@ -85,25 +80,13 @@
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Preprint
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DOI
 \begin{textblock*}{\textwidth}(2.5cm,19cm)
 \Large
-%\noindent \color{black}{$^*$}\color{violet}{Preprint - not peer reviewed. This manuscript may be submitted to a journal.}
-\noindent \color{black}{$^*$}\color{violet}{Preprint - not peer reviewed. This manuscript may be submitted to a journal.} \\ \textcolor{black}{DOI: XXX-XXX}%\url{https://doi.org/10.5281/zenodo.18196580}}
+\noindent \color{black}{$^*$}\textcolor{black}{DOI: \href{https://doi.org/10.5281/zenodo.18196579}{10.5281/zenodo.18196579}}
 \end{textblock*}
 
 
-
-
-
-%\begin{textblock*}{4.7cm}(1cm,1cm)
-%\begin{tcolorbox}[colback=white,colframe=rojillo,boxrule=0.5pt,arc=5pt,left=0pt,right=15pt,top=15pt,bottom=15pt]
-%\Huge
-%{\color{rojillo}
-%    \texttt{PREPRINT}
-%}
-%\end{tcolorbox}
-%\end{textblock*}
 
 
 

@@ -181,7 +181,7 @@ def main() -> None:
     tex_content = template
 
     replacements = {
-        "CODIGONUTS": args.region,
+        "NUTSCODE": args.region,
         "RESOLUTION": resolution,
         "FIGEXT": fig_ext,
         "THRESHOLD": format_number(threshold, decimals=3),
@@ -206,13 +206,13 @@ def main() -> None:
         demand_2025_str = format_number(demand_2025, decimals=2)
 
         installed_note = (
-            f"{{\\color{{gris}} Installed wind power capacity in {region_name} in 2025 was "
+            f"{{\\color{{grey}} Installed wind power capacity in {region_name} in 2025 was "
             f"\\textbf{{{pot_actual_str} GW}}.}} \\vspace{{0.4cm}}"
         )
         energy_note = (
             f"\\item \\texttt{{\\textbf{{ENERGY:}}}} {{\\color{{low}}\\textbf{{{potene_str} TWh}}}} could be generated with this potential capacity.\n"
             f"\n"
-            f"        {{\\color{{gris}} This represents around \\textbf{{{perc_demand_str}\\%}} of the actual electricity demand in the region ({demand_2025_str} TWh).}}"
+            f"        {{\\color{{grey}} This represents around \\textbf{{{perc_demand_str}\\%}} of the actual electricity demand in the region ({demand_2025_str} TWh).}}"
         )
     else:
         installed_note = "% Installed capacity note omitted for this NUTS level"

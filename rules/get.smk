@@ -25,7 +25,7 @@ def get_regions_for_nuts(wc):
 
 #################### get_raster_ISA
 #
-# This rule is to generate an ISA raster for a specific region from the Spanis ISA raster
+# This rule is to generate an ISA raster for a specific region from the Spanish ISA raster
 #
 # Wildcards:
 #   - nuts      [NUTS2, NUTS3]

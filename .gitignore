@@ -25,6 +25,14 @@ venv/
 
 
 
+# LaTeX build artifacts
+*.aux
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+LaTex/*.log
+LaTex/*.pdf
+
 # Jupyter Notebook
 .ipynb_checkpoints
 

@@ -1,54 +1,54 @@
 # ISA-NUTS_potentials
 
-## Resource planning from benchmarks
+Regional assessment of onshore wind power potential in low environmental
+sensitivity areas of Spain.
 
-This workflow uses Snakemake benchmark TSV files to estimate per-rule resource
-requests.
+## Overview
 
-Each benchmark file stores one summary row for one benchmark path. If the same
-job is executed again, that TSV is rewritten. Different wildcard combinations
-produce different benchmark files.
+The workflow estimates onshore wind power potential across Spanish NUTS regions
+(NUTS0, NUTS2 and NUTS3), restricted to the lowest environmental sensitivity
+class (ISA-4) of the ISA index published by MITECO. For each region it:
 
-For each rule, resource inference follows this order:
+1. Builds the wind capacity factor (CF) from a reanalysis cutout (e.g. ERA5,
+   NEWA) using [atlite](https://github.com/PyPSA/atlite) and a reference wind
+   turbine power curve.
+2. Selects land with low environmental sensitivity (ISA-4) and CF above a
+   configurable threshold.
+3. Computes the installable capacity and the associated energy potential, and
+   compares them with the actual installed capacity and electricity demand.
+4. Produces maps, Venn diagrams and per-region LaTeX summary sheets.
 
-1. Use the exact benchmark for that job if it exists.
-2. Otherwise use the worst observed benchmark available for that rule.
-3. Otherwise use a conservative static default defined in the Snakefile.
+## Requirements
 
-The workflow derives:
-
-1. `threads` from `cpu_time / s`, with a small safety margin.
-2. `mem_mb` from `max_rss`, with a small safety margin.
-
-## Important distinction: per-job vs global memory
-
-Declaring `resources: mem_mb=...` inside rules does not by itself impose a
-global memory cap in local execution. Those values become active for scheduling
-only when Snakemake is started with a global resource budget.
-
-Examples:
+The environment is managed with [pixi](https://pixi.sh):
 
 ```bash
-pixi run snakemake all --cores 32
+pixi install
 ```
 
-This limits total CPU usage through `threads`, but does not use `mem_mb` to
-limit overall concurrency.
+## Usage
+
+The pipeline is orchestrated with Snakemake. To build all outputs:
 
 ```bash
-pixi run snakemake all --cores 32 --resources mem_mb=230000
+pixi run snakemake all --cores <N>
 ```
 
-This limits both:
+Regions, resources, cutouts, years and analysis parameters (turbine, CF
+threshold, capacity density, etc.) are configured in
+[`config/config.yaml`](config/config.yaml).
 
-1. Total CPU usage to 32 cores.
-2. Total scheduled memory to 230000 MB across concurrent jobs.
+## Data
 
-For a machine with 252 GB RAM, `mem_mb=230000` is a reasonable starting point
-that leaves headroom for the OS and non-workflow processes.
+The ISA environmental sensitivity rasters (from MITECO) and the GEBCO bathymetry
+are downloaded automatically by dedicated Snakemake rules
+([`rules/retrieve.smk`](rules/retrieve.smk)); the downloaded files and all
+generated results live outside version control (see `.gitignore`).
 
-## Note on enforcement
+The only inputs that must be provided locally are the reanalysis cutouts
+referenced in [`config/config.yaml`](config/config.yaml) (`cutout_params`),
+which point to machine-specific paths and should be adjusted to your setup.
 
-In local execution, Snakemake resources are used for scheduling, not as hard OS
-limits on the spawned processes. In other words, `mem_mb` helps avoid launching
-too many memory-hungry jobs at once, but it does not sandbox each process.
+## License
+
+Released under the MIT License (see [`LICENSE`](LICENSE)).

@@ -116,9 +116,9 @@ gebco:
 
 cutout_params:
   era5_2013:
-    path: "~/SANDBOX/cutouts/europe-2013-sarah3-era5.nc"
+    path: # ADD PATH TO CUTOUT
   newa_2013:
-    path: "~/DOCK_01/local/Ryz3975/cutouts/IP-2013-solarwind_newa_0_05_cp.nc"
+    path: # ADD PATH TO CUTOUT
 
 CF_params:
   onwind:
