@@ -506,6 +506,7 @@ def plot_dataarray_on_map(
     cbar_label="Value",
     vmin=None,
     vmax=None,
+    vcenter=None,
     size=12,
     linewidth=1.5,
     fontsize=16,
@@ -541,6 +542,12 @@ def plot_dataarray_on_map(
         Minimum value for colormap, by default None (auto)
     vmax : float, optional
         Maximum value for colormap, by default None (auto)
+    vcenter : float, optional
+        Threshold value at which the colormap changes color (mapped to the
+        midpoint of a diverging colormap via TwoSlopeNorm). The vmin/vmax
+        limits are always respected. Only applied when vmin < vcenter < vmax;
+        otherwise it is ignored and a regular linear scale is used.
+        By default None (no color change, plain linear scale).
     size : int, optional
         Figure size (square), by default 12
     linewidth : float, optional
@@ -556,7 +563,8 @@ def plot_dataarray_on_map(
         by default "gdf"
     """
     import matplotlib.pyplot as plt
-    
+    from matplotlib.colors import TwoSlopeNorm
+
     ##### Auto-detect spatial dimensions if defaults don't exist
     if x_coord not in data.dims or y_coord not in data.dims:
         detected_dims = _select_spatial_dims_xarray(data)
@@ -576,12 +584,29 @@ def plot_dataarray_on_map(
         "add_colorbar": False,
     }
     
-    # Add vmin/vmax if specified
-    if vmin is not None:
-        plot_kwargs["vmin"] = vmin
-    if vmax is not None:
-        plot_kwargs["vmax"] = vmax
-    
+    # Use a TwoSlopeNorm when a threshold (vcenter) is given so the colormap
+    # changes color at that value while still respecting vmin/vmax. This only
+    # works if vmin < vcenter < vmax; otherwise fall back to a linear scale.
+    use_twoslope = (
+        vcenter is not None
+        and vmin is not None
+        and vmax is not None
+        and vmin < vcenter < vmax
+    )
+    if use_twoslope:
+        plot_kwargs["norm"] = TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
+    else:
+        if vcenter is not None:
+            _log_and_print(
+                f"[plot_dataarray_on_map] vcenter={vcenter} is outside "
+                f"(vmin={vmin}, vmax={vmax}); ignoring threshold and using a linear scale."
+            )
+        # Add vmin/vmax if specified
+        if vmin is not None:
+            plot_kwargs["vmin"] = vmin
+        if vmax is not None:
+            plot_kwargs["vmax"] = vmax
+
     mappable = data.plot(**plot_kwargs)
     
     ##### Configure axes
@@ -601,7 +626,11 @@ def plot_dataarray_on_map(
     )
     cbar.set_label(cbar_label, fontsize=fontsize*1.5)
     cbar.ax.tick_params(labelsize=fontsize*1.5)
-    
+
+    ##### Mark the threshold on the colorbar (where the color changes)
+    if use_twoslope:
+        cbar.ax.axhline(y=vcenter, color="black", linewidth=linewidth, linestyle="--")
+
     ##### Add NUTS boundaries
     # Add gdf for regions with the same NUTS code with thin grey lines
     gdf_NUTS[gdf_NUTS['LEVL_CODE'] == gdf_NUTS_local['LEVL_CODE'].iloc[0]].plot(

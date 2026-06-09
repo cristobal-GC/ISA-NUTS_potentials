@@ -23,6 +23,7 @@ def _log_and_print(message):
 
 ##### params
 fig_params = snakemake.params["fig_params"]
+CF_threshold = snakemake.params["CF_threshold"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
 file_nc_CF = snakemake.input["nc_CF"]
@@ -111,6 +112,7 @@ plot_dataarray_on_map(
     cbar_label="Capacity Factor",
     vmin=vmin,
     vmax=vmax,
+    vcenter=CF_threshold,
     size=size,
     linewidth=linewidth,
     fontsize=fontsize,

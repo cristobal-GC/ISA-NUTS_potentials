@@ -151,7 +151,8 @@ rule plot_CF:
     message:
         "... [plot_CF] Plotting CF map for cutout: {wildcards.cutout}, year: {wildcards.year}, resource: {wildcards.resource}, region: {wildcards.region}, format: {wildcards.format}."
     params:
-        fig_params=config["fig_params"]
+        fig_params=config["fig_params"],
+        CF_threshold=lambda w: config["CF_params"][w.resource]["CF_threshold"]
     input:
         gdf_NUTS ="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
         nc_CF="results/ncs/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.nc",

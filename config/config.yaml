@@ -155,9 +155,9 @@ fig_params:
       units: W/m2
   CF:
     onwind:
-      cmap: BuPu
+      cmap: PiYG # RdYlGn   # diverging: low CF (red) -> threshold -> high CF (green)
     solar:
-      cmap: BuPu
+      cmap: PiYG # RdYlGn
   CAPACITY:
     onwind:
       cmap: YlGn
