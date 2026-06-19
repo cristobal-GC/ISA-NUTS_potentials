@@ -17,7 +17,7 @@ def get_tex_fig_ext(wc):
 
 rule get_tex_summary:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
         resolution="HR|LR",
         resource="onwind|solar",
     threads:
@@ -42,7 +42,7 @@ rule get_tex_summary:
             if w.resource == "onwind"
             else f"LaTex/template_summary_{w.resource}.tex"
         ),
-        nuts_geojson="data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson",
+        nuts_geojson=gdf_nuts_input,
         df_summary="results/dfs/summary/{cutout}/{nuts}/df_summary_{resource}_{year}.csv",
         map_ISA=lambda w: f"results/maps/ISA/{w.nuts}/{w.resolution}/ISA_{w.resource}_{w.region}_{w.resolution}.{get_tex_fig_ext(w)}",
         map_CF=lambda w: f"results/maps/CF/{w.cutout}/{w.nuts}/CF_{w.resource}_{w.region}_{w.year}.{get_tex_fig_ext(w)}",
@@ -60,6 +60,7 @@ rule get_tex_summary:
             "--nuts {wildcards.nuts} "
             "--resolution {wildcards.resolution} "
             "--fig-ext {params.fig_ext} "
+            "--nuts-geojson {input.nuts_geojson} "
             "--template {input.template}"
         )
 
@@ -88,7 +89,7 @@ rule get_tex_summary:
 
 rule compile_tex_summary:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
         resolution="HR|LR",
         resource="onwind|solar",
     threads:

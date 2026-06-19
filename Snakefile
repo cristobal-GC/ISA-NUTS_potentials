@@ -50,11 +50,16 @@ def infer_nuts_level(region):
 
 # This generates REGION_NUTS_PAIRS = [(NUTS0, region0), (NUTS2, region1), (NUTS2, region2), ..., (NUTS3, regionX), ...]
 if isinstance(REGIONS_CFG, dict):
-    VALID_NUTS_KEYS = {"NUTS0", "NUTS2", "NUTS3"}
+    # Standard NUTS levels have codes that follow a fixed pattern and can be
+    # inferred/validated. Custom levels (e.g. CIMAS) use arbitrary domain ids
+    # defined explicitly in the config, so they are not subject to inference.
+    STANDARD_NUTS_KEYS = {"NUTS0", "NUTS2", "NUTS3"}
+    CUSTOM_NUTS_KEYS = {"CIMAS"}
+    VALID_NUTS_KEYS = STANDARD_NUTS_KEYS | CUSTOM_NUTS_KEYS
     invalid_keys = [key for key in REGIONS_CFG if key not in VALID_NUTS_KEYS]
     if invalid_keys:
         raise ValueError(
-            f"Invalid regions keys {invalid_keys}. Expected only 'NUTS0', 'NUTS2' and/or 'NUTS3'."
+            f"Invalid regions keys {invalid_keys}. Expected only 'NUTS0', 'NUTS2', 'NUTS3' and/or 'CIMAS'."
         )
 
     REGION_NUTS_PAIRS = [
@@ -64,6 +69,8 @@ if isinstance(REGIONS_CFG, dict):
     ]
 
     for nuts, region in REGION_NUTS_PAIRS:
+        if nuts not in STANDARD_NUTS_KEYS:
+            continue
         inferred = infer_nuts_level(region)
         if inferred != nuts:
             raise ValueError(
@@ -76,6 +83,14 @@ if not REGION_NUTS_PAIRS:
     raise ValueError(
         "No regions configured. Define regions in config/config.yaml as a list or under regions.NUTS0/NUTS2/NUTS3."
     )
+
+
+# Levels actually present in the configuration. NUTS-level aggregated products
+# (combined Venn, potential comparison, NUTS map, LaTeX deck/tables) only make
+# sense for multi-region administrative levels (NUTS2/NUTS3) that are configured.
+# Single-domain levels (NUTS0, CIMAS) only get per-region products.
+NUTS_LEVELS_PRESENT = sorted({nuts for nuts, _ in REGION_NUTS_PAIRS})
+AGG_NUTS_LEVELS = [nuts for nuts in ("NUTS2", "NUTS3") if nuts in NUTS_LEVELS_PRESENT]
 
 
 
@@ -304,7 +319,7 @@ rule all:
 
         [
             f"results/maps/NUTS/{nuts}/NUTS_{nuts}.{fmt}"
-            for nuts in ["NUTS2", "NUTS3"]
+            for nuts in AGG_NUTS_LEVELS
             for fmt in FORMATS
         ],
 
@@ -313,7 +328,7 @@ rule all:
             for cutout in CUTOUTS
             for year in YEARS
             for resource in RESOURCES
-            for nuts in ["NUTS2", "NUTS3"]
+            for nuts in AGG_NUTS_LEVELS
         ],
 
         [
@@ -321,7 +336,7 @@ rule all:
             for cutout in CUTOUTS
             for year in YEARS
             for resource in RESOURCES
-            for nuts in ["NUTS2", "NUTS3"]
+            for nuts in AGG_NUTS_LEVELS
         ],
 
         [
@@ -329,7 +344,7 @@ rule all:
             for cutout in CUTOUTS
             for year in YEARS
             for resource in RESOURCES
-            for nuts in ["NUTS2", "NUTS3"]
+            for nuts in AGG_NUTS_LEVELS
         ],
 
         [
@@ -337,12 +352,12 @@ rule all:
             for cutout in CUTOUTS
             for year in YEARS
             for resource in RESOURCES
-            for nuts in ["NUTS2", "NUTS3"]
+            for nuts in AGG_NUTS_LEVELS
         ],
 
         [
             f"results/LaTex/tables/ISA/{nuts}/table_ISA_{resource}_{nuts}.tex"
-            for nuts in ["NUTS2", "NUTS3"]
+            for nuts in AGG_NUTS_LEVELS
             for resource in RESOURCES
         ],
 
@@ -351,7 +366,7 @@ rule all:
             for cutout in CUTOUTS
             for year in YEARS
             for resource in RESOURCES
-            for nuts in ["NUTS2", "NUTS3"]
+            for nuts in AGG_NUTS_LEVELS
         ],
 
         [
@@ -446,7 +461,7 @@ rule plot_NUTSs:
     input:
         [
             f"results/maps/NUTS/{nuts}/NUTS_{nuts}.{fmt}"
-            for nuts in ["NUTS2", "NUTS3"]
+            for nuts in AGG_NUTS_LEVELS
             for fmt in FORMATS
         ]
 
