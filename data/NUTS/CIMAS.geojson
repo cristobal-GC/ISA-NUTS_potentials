@@ -3,6 +3,7 @@
 "name": "CIMAS",
 "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
 "features": [
-{ "type": "Feature", "properties": { "NUTS_ID": "DOM1", "LEVL_CODE": 9, "CNTR_CODE": "", "NAME_LATN": "DOM1", "NUTS_NAME": "DOM1" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -4.78, 40.15 ], [ -4.78, 40.55 ], [ -6.43, 40.55 ], [ -6.43, 40.15 ], [ -4.78, 40.15 ] ] ] } }
+{ "type": "Feature", "properties": { "NUTS_ID": "DOM1", "LEVL_CODE": 9, "CNTR_CODE": "", "NAME_LATN": "DOM1", "NUTS_NAME": "DOM1" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -2.33, 39.28 ], [ -2.33, 41.67 ], [ -9.11, 41.67 ], [ -9.11, 39.28 ], [ -2.33, 39.28 ] ] ] } },
+{ "type": "Feature", "properties": { "NUTS_ID": "DOM2", "LEVL_CODE": 9, "CNTR_CODE": "", "NAME_LATN": "DOM2", "NUTS_NAME": "DOM2" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -2.33, 39.28 ], [ -2.33, 41.67 ], [ -6.18, 41.67 ], [ -6.18, 39.28 ], [ -2.33, 39.28 ] ] ] } }
 ]
 }

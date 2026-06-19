@@ -31,6 +31,7 @@ rule plot_GEBCO:
         fig_params=config["fig_params"]
     input:
         gdf_NUTS=gdf_nuts_input,
+        gdf_NUTS_ref=NUTS_GEOJSON,
         nc_GEBCO=f"{GEBCO_CFG['folder']}/{GEBCO_CFG['file_name']}"
     output:
         map_GEBCO="results/maps/GEBCO/{nuts}/GEBCO_{region}.{format}"
@@ -69,6 +70,7 @@ rule plot_ISA:
         fig_params=config["fig_params"]
     input:
         gdf_NUTS=gdf_nuts_input,
+        gdf_NUTS_ref=NUTS_GEOJSON,
         raster_ISA="results/rasters/ISA/{nuts}/raster_ISA_{resource}_{region}.tiff",
         df_ISA="results/dfs/ISA/{nuts}/df_ISA_{resource}_{region}.csv"
     output:
@@ -110,6 +112,7 @@ rule plot_cutout:
         fig_params=config["fig_params"]
     input:
         gdf_NUTS=gdf_nuts_input,
+        gdf_NUTS_ref=NUTS_GEOJSON,
     output:
         map_cutout="results/maps/cutout/{cutout}/{nuts}/cutout_{resource}_{region}_{year}.{format}"
     script:
@@ -155,6 +158,7 @@ rule plot_CF:
         CF_threshold=lambda w: config["CF_params"][w.resource]["CF_threshold"]
     input:
         gdf_NUTS=gdf_nuts_input,
+        gdf_NUTS_ref=NUTS_GEOJSON,
         nc_CF="results/ncs/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.nc",
         dfs_CF_CAPACITY=lambda w: expand(
             "results/dfs/CF_CAPACITY/{cutout}/{nuts}/df_CF_CAPACITY_ISA{isa}_{resource}_{region}_{year}.csv",
@@ -206,6 +210,7 @@ rule plot_CAPACITY:
         fig_params=config["fig_params"]
     input:
         gdf_NUTS=gdf_nuts_input,
+        gdf_NUTS_ref=NUTS_GEOJSON,
         nc_CAPACITY="results/ncs/CAPACITY/{cutout}/{nuts}/CAPACITY_{filters}_{resource}_{region}_{year}.nc"
     output:
         map_CAPACITY="results/maps/CAPACITY/{cutout}/{nuts}/CAPACITY_{filters}_{resource}_{region}_{year}.{format}"

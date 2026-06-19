@@ -23,7 +23,12 @@ regions:
   # ##########- ES63 # Ciudad Autónoma de Ceuta
   # ##########- ES64 # Ciudad Autónoma de Melilla
   # ##########- ES70 # Canarias
-  # NUTS3:
+  NUTS3:
+  # NUTS3 regions contained within the CIMAS DOM2 domain (~100% inside)
+  - ES300 # Madrid
+  - ES411 # Ávila
+  - ES416 # Segovia
+  - ES425 # Toledo
   # - ES111 # A Coruña
   # - ES112 # Lugo
   # - ES113 # Ourense
@@ -85,6 +90,7 @@ regions:
   # ##########- ES709 # Tenerife
   CIMAS:
   - DOM1
+  - DOM2
 
 resources:
 - onwind
@@ -188,9 +194,19 @@ CIMAS_domains:
   DOM1:
     NUTS_ID: "DOM1"
     geometry:
-    - lat_min: 40.15
-    - lat_max: 40.55
-    - lon_min: -6.43
-    - lon_max: -4.78
+    - lat_min: 39.28
+    - lat_max: 41.67
+    - lon_min: -9.11
+    - lon_max: -2.33
+  DOM2:
+    # Like DOM1 but restricted to Spanish territory: lon_min is set just east of
+    # the easternmost point of the Spain-Portugal border (Portugal max lon
+    # -6.1894, Miranda do Douro), snapped to the next cutout grid node (-6.18).
+    NUTS_ID: "DOM2"
+    geometry:
+    - lat_min: 39.28
+    - lat_max: 41.67
+    - lon_min: -6.18
+    - lon_max: -2.33
 
 

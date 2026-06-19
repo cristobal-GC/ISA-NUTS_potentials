@@ -8,6 +8,7 @@ from matplotlib import cm
 import matplotlib.colors as mcolors
 from matplotlib.patches import Patch
 import matplotlib.pyplot as plt
+from utils import geographic_aspect
 
 from typing import Any
 snakemake: Any
@@ -151,6 +152,12 @@ dy = ymax - ymin
 pad_x = max(dx * 0.03, 1e-6)
 pad_y = max(dy * 0.03, 1e-6)
 ax.set_extent([xmin - pad_x, xmax + pad_x, ymin - pad_y, ymax + pad_y], crs=crs)
+
+# Make the map distance-proportionate (cos(lat) correction): a PlateCarree
+# GeoAxes defaults to aspect=1 (one degree of lon drawn as long as one degree of
+# lat), which stretches the map horizontally. This matches the convention used
+# for the other (non-projected) maps. See utils.geographic_aspect.
+ax.set_aspect(geographic_aspect((ymin + ymax) / 2))
 
 legend_name_col = "NUTS_NAME" if "NUTS_NAME" in gdf_level.columns else "NUTS_ID"
 legend_elements = [

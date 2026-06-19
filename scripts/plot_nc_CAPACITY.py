@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-from utils import load_gdf_nuts, plot_dataarray_on_map, load_CAPACITY
+from utils import load_gdf_nuts, load_context_boundaries, plot_dataarray_on_map, load_CAPACITY
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -13,6 +13,7 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 fig_params = snakemake.params["fig_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
+file_gdf_NUTS_ref = snakemake.input["gdf_NUTS_ref"]
 file_nc_CAPACITY = snakemake.input["nc_CAPACITY"]
 ##### output
 file_map_CAPACITY = snakemake.output["map_CAPACITY"]
@@ -21,6 +22,7 @@ cutout = snakemake.wildcards["cutout"]
 year = snakemake.wildcards["year"]
 region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
+nuts = snakemake.wildcards["nuts"]
 try:
     ISA_list = [int(snakemake.wildcards["isa"])]
 except (KeyError, AttributeError):
@@ -31,8 +33,9 @@ except (KeyError, AttributeError):
 ##### Load CAPACITY
 CAPACITY = load_CAPACITY(file_nc_CAPACITY)
 
-##### Load gdf_NUTS
-gdf_NUTS, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
+##### Load local geometry (black outline) and context boundaries (grey)
+_, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
+gdf_context = load_context_boundaries(file_gdf_NUTS_ref, nuts)
 
 
 ############################## Create outputs
@@ -58,7 +61,7 @@ else:
 ##### Make plot
 plot_dataarray_on_map(
     data=CAPACITY,
-    gdf_NUTS=gdf_NUTS,
+    gdf_context=gdf_context,
     gdf_NUTS_local=gdf_NUTS_local,
     region=region,
     file_output=file_map_CAPACITY,

@@ -3,7 +3,8 @@ import pandas as pd
 
 import rasterio
 from rasterio.plot import show
-from utils import load_gdf_nuts, log_raster_spatial_info
+from rasterio.warp import calculate_default_transform, reproject, Resampling
+from utils import load_gdf_nuts, load_context_boundaries, log_raster_spatial_info, set_geographic_square_extent
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -25,6 +26,7 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 fig_params = snakemake.params["fig_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
+file_gdf_NUTS_ref = snakemake.input["gdf_NUTS_ref"]
 file_raster_ISA = snakemake.input["raster_ISA"]
 file_df_ISA = snakemake.input["df_ISA"]
 ##### output
@@ -34,26 +36,62 @@ region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
 resolution = snakemake.wildcards["resolution"]
 format = snakemake.wildcards["format"]
+nuts = snakemake.wildcards["nuts"]
 
 
 
 ############################## Operations
 
-##### Load raster_ISA and read required attributes
+##### Load raster_ISA and reproject it to EPSG:4326 for plotting.
+# The MITECO ISA raster is in a projected CRS (EPSG:25830, metres). All other
+# maps in this workflow (CF, cutout, GEBCO) are drawn in geographic lon/lat
+# (EPSG:4326). For small NUTS regions the difference is imperceptible, but for
+# large domains (e.g. CIMAS) the projected raster looks visibly skewed/rotated
+# relative to the lat/lon rectangle. Reproject to EPSG:4326 so the ISA map is
+# coherent with the rest. Nearest resampling preserves the categorical classes.
+plot_crs = "EPSG:4326"
 with rasterio.open(file_raster_ISA) as raster_ISA:
     log_raster_spatial_info(raster_ISA, source_label=file_raster_ISA)
 
-    raster_crs = raster_ISA.crs
-    transform = raster_ISA.transform
-    band_masked = raster_ISA.read(1, masked=True) # Read once as masked array for plotting.
+    src_crs = raster_ISA.crs
+    src_transform = raster_ISA.transform
+    src_nodata = raster_ISA.nodata
+    src_band = raster_ISA.read(1)
+
+    dst_transform, dst_width, dst_height = calculate_default_transform(
+        src_crs, plot_crs, raster_ISA.width, raster_ISA.height, *raster_ISA.bounds
+    )
+
+fill_value = src_nodata if src_nodata is not None else np.nan
+dst_band = np.full((dst_height, dst_width), fill_value, dtype="float32")
+reproject(
+    source=src_band,
+    destination=dst_band,
+    src_transform=src_transform,
+    src_crs=src_crs,
+    dst_transform=dst_transform,
+    dst_crs=plot_crs,
+    src_nodata=src_nodata,
+    dst_nodata=fill_value,
+    resampling=Resampling.nearest,
+)
+
+if src_nodata is not None:
+    band_masked = np.ma.masked_equal(dst_band, src_nodata)
+else:
+    band_masked = np.ma.masked_invalid(dst_band)
+
+raster_crs = plot_crs
+transform = dst_transform
 
 ##### Load df_ISA
 df = pd.read_csv(file_df_ISA, index_col="value")
 
-##### Load gdf_NUTS and change crs to that of the ISA raster 
-gdf_NUTS, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
-gdf_NUTS = gdf_NUTS.to_crs(raster_crs)
+##### Load local geometry (black outline) and context boundaries (grey),
+##### both in the same (geographic) CRS used for plotting.
+_, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
 gdf_NUTS_local = gdf_NUTS_local.to_crs(raster_crs)
+gdf_context = load_context_boundaries(file_gdf_NUTS_ref, nuts).to_crs(raster_crs)
 
 
 
@@ -95,10 +133,10 @@ show(band_masked,
     ax=ax
 )
 
-# Add gdf for regions with the same NUTS code with thin grey lines
-gdf_NUTS[gdf_NUTS['LEVL_CODE'] == gdf_NUTS_local['LEVL_CODE'].iloc[0]].plot(ax=ax, color="none", edgecolor='grey', linewidth=linewidth)
+# Context regions (thin grey): same-level NUTS, or NUTS3 for a CIMAS domain.
+gdf_context.plot(ax=ax, color="none", edgecolor='grey', linewidth=linewidth)
 
-# Add gdf_local with double linewidth
+# Region/domain being plotted (thick black).
 gdf_NUTS_local.plot(ax=ax, color="none", edgecolor='black', linewidth=linewidth*2)
 
 # Add legend
@@ -112,20 +150,12 @@ ax.legend(
     bbox_to_anchor=(1.4, 1),  # legend out of the plot    
 )
 
-# Set limits centered on the region with equal x/y extent (square map).
-# The raster CRS is a projected one (units: metres), so delta_x and delta_y are
-# directly comparable. Taking max(delta_x, delta_y) and centering ensures that
-# both axes span the same distance, producing a square, undistorted map.
-xmin, ymin, xmax, ymax = gdf_NUTS_local.total_bounds
-center_x = (xmax + xmin) / 2
-center_y = (ymax + ymin) / 2
-delta_x = xmax - xmin
-delta_y = ymax - ymin
-
-half_extent = max(delta_x, delta_y) * 0.5 * 1.02
-
-ax.set_xlim(center_x - half_extent, center_x + half_extent)
-ax.set_ylim(center_y - half_extent, center_y + half_extent)
+# Set square, distance-proportionate limits with the cos(lat) correction, the
+# same convention used for the CF/cutout/GEBCO maps, so the ISA map is coherent.
+# show() forces aspect='equal'; reset to 'auto' so the km-corrected limits drive
+# the appearance, as in the other maps.
+ax.set_aspect("auto")
+set_geographic_square_extent(ax, gdf_NUTS_local)
 
 ax.set_xticks([])
 ax.set_yticks([])

@@ -397,6 +397,31 @@ def load_gdf_nuts(file_gdf_NUTS, region):
 
 
 
+def load_context_boundaries(file_nuts, nuts):
+    """Reference administrative boundaries drawn as thin grey context on a map.
+
+    The region/domain being analysed is always drawn with a thick black outline;
+    this returns the lighter background layer drawn behind it:
+      - NUTS0 / NUTS2 / NUTS3: the other regions of the SAME NUTS level.
+      - CIMAS: the NUTS3 regions (provinces). A CIMAS domain is a custom
+        rectangle with no sibling regions of its own, so NUTS3 boundaries are
+        used to give geographic context within the domain.
+
+    The boundaries always come from the official NUTS GeoJSON (returned in its
+    CRS, EPSG:4326), regardless of where the analysed geometry comes from.
+    """
+    levl_by_nuts = {"NUTS0": 0, "NUTS2": 2, "NUTS3": 3, "CIMAS": 3}
+    if nuts not in levl_by_nuts:
+        raise ValueError(
+            f"[load_context_boundaries] Unknown nuts level '{nuts}'. "
+            f"Expected one of {sorted(levl_by_nuts)}."
+        )
+
+    gdf = gpd.read_file(file_nuts)
+    return gdf[gdf["LEVL_CODE"] == levl_by_nuts[nuts]]
+
+
+
 def load_and_limit_cutout(file_cutout, gdf_local):
 
     """This function loads the cutout and limits it to the bounding box of the local region. It also checks and handles CRS mismatches between the cutout and the local region geometry."""
@@ -494,9 +519,61 @@ def load_GEBCO(file_nc_GEBCO):
 
 
 
+def set_geographic_square_extent(ax, gdf_local, margin=1.02):
+    """Set square, distance-proportionate axis limits for a lon/lat map.
+
+    On a plain (non-projected) matplotlib axis the data are in geographic
+    degrees, but one degree of longitude only spans cos(lat) of the ground
+    distance of one degree of latitude. Plotting degrees 1:1 would stretch the
+    map horizontally. We therefore convert the region's degree extent into
+    kilometres (km_per_lon = 111*cos(lat), km_per_lat = 111), equalise the span
+    on both axes (taking the larger so the whole region fits), and convert back
+    to degrees per axis. The result is a square, undistorted map where 1 km
+    looks the same on both axes -- the common convention for every map in this
+    workflow, so ISA/CF/cutout/GEBCO are mutually coherent.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Plain (non-cartopy) axis to set limits on.
+    gdf_local : geopandas.GeoDataFrame
+        Region geometry in geographic CRS (EPSG:4326); its total_bounds set the
+        extent.
+    margin : float
+        Multiplicative padding around the region (1.02 = 2 %).
+    """
+    xmin, ymin, xmax, ymax = gdf_local.total_bounds
+    center_lat = (ymax + ymin) / 2
+    km_per_lat = 111
+    km_per_lon = 111 * np.cos(np.deg2rad(center_lat))
+    center_x = (xmax + xmin) / 2
+    center_y = (ymax + ymin) / 2
+    delta_x = xmax - xmin
+    delta_y = ymax - ymin
+    delta_km = max(km_per_lon * delta_x, km_per_lat * delta_y) * margin
+    ax.set_xlim(center_x - 0.5 * delta_km / km_per_lon, center_x + 0.5 * delta_km / km_per_lon)
+    ax.set_ylim(center_y - 0.5 * delta_km / km_per_lat, center_y + 0.5 * delta_km / km_per_lat)
+
+
+
+def geographic_aspect(center_lat):
+    """matplotlib aspect for a cartopy PlateCarree GeoAxes so distances are proportionate.
+
+    A PlateCarree GeoAxes defaults to aspect=1, i.e. one degree of longitude is
+    drawn as long as one degree of latitude. Because a degree of longitude only
+    spans cos(lat) of the ground distance of a degree of latitude, this stretches
+    the map horizontally. Returning 1/cos(lat) (the matplotlib aspect = vertical
+    units per horizontal unit) makes 1 km look the same on both axes, matching
+    the cos(lat) correction used for the non-projected maps
+    (see set_geographic_square_extent).
+    """
+    return 1.0 / np.cos(np.deg2rad(center_lat))
+
+
+
 def plot_dataarray_on_map(
     data,
-    gdf_NUTS,
+    gdf_context,
     gdf_NUTS_local,
     region,
     file_output,
@@ -522,10 +599,12 @@ def plot_dataarray_on_map(
     ----------
     data : xr.DataArray
         2D data array to plot
-    gdf_NUTS : geopandas.GeoDataFrame
-        Full NUTS boundaries GeoDataFrame
+    gdf_context : geopandas.GeoDataFrame
+        Reference boundaries drawn as thin grey context (e.g. same-level NUTS
+        regions, or NUTS3 provinces for a CIMAS domain). See
+        load_context_boundaries.
     gdf_NUTS_local : geopandas.GeoDataFrame
-        Local region NUTS boundary
+        Region/domain being plotted, drawn as a thick black outline.
     region : str
         Region code (e.g., 'ES11')
     file_output : str
@@ -631,37 +710,22 @@ def plot_dataarray_on_map(
     if use_twoslope:
         cbar.ax.axhline(y=vcenter, color="black", linewidth=linewidth, linestyle="--")
 
-    ##### Add NUTS boundaries
-    # Add gdf for regions with the same NUTS code with thin grey lines
-    gdf_NUTS[gdf_NUTS['LEVL_CODE'] == gdf_NUTS_local['LEVL_CODE'].iloc[0]].plot(
+    ##### Add boundaries
+    # Context regions (thin grey): same-level NUTS, or NUTS3 for a CIMAS domain.
+    gdf_context.plot(
         ax=ax, color="none", edgecolor='grey', linewidth=linewidth
     )
-    
-    # Add gdf_local with double linewidth
+
+    # Region/domain being plotted (thick black).
     gdf_NUTS_local.plot(
         ax=ax, color="none", edgecolor='black', linewidth=linewidth*2
     )
     
     ##### Set axis limits
     if bounds_type == "gdf":
-        # Use GDF bounds (for geographic coordinates)
-        xmin, ymin, xmax, ymax = gdf_NUTS_local.total_bounds
-        center_lat = (ymax + ymin) / 2
-        km_per_lat = 111
-        km_per_lon = 111 * np.cos(np.deg2rad(center_lat))
-        center_x = (xmax + xmin) / 2
-        center_y = (ymax + ymin) / 2
-        delta_x = xmax - xmin
-        delta_y = ymax - ymin
-        delta_km = max([km_per_lon*delta_x, km_per_lat*delta_y]) * 1.02
-        ax.set_xlim(
-            center_x - 0.5*delta_km/km_per_lon,
-            center_x + 0.5*delta_km/km_per_lon
-        )
-        ax.set_ylim(
-            center_y - 0.5*delta_km/km_per_lat,
-            center_y + 0.5*delta_km/km_per_lat
-        )
+        # Use GDF bounds (geographic coordinates), with the cos(lat) correction
+        # so the map is square and undistorted (1 km equal on both axes).
+        set_geographic_square_extent(ax, gdf_NUTS_local)
     elif bounds_type == "data":
         # Use data coordinate bounds
         xmin, xmax = data[x_coord].min().values, data[x_coord].max().values

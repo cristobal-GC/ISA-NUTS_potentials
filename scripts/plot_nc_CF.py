@@ -4,7 +4,7 @@ import cartopy.crs as ccrs
 import logging
 import re
 from pathlib import Path
-from utils import load_gdf_nuts, plot_dataarray_on_map, load_CF
+from utils import load_gdf_nuts, load_context_boundaries, plot_dataarray_on_map, load_CF
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -26,6 +26,7 @@ fig_params = snakemake.params["fig_params"]
 CF_threshold = snakemake.params["CF_threshold"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
+file_gdf_NUTS_ref = snakemake.input["gdf_NUTS_ref"]
 file_nc_CF = snakemake.input["nc_CF"]
 files_df_CF_CAPACITY = snakemake.input["dfs_CF_CAPACITY"]
 ##### output
@@ -35,6 +36,7 @@ cutout = snakemake.wildcards["cutout"]
 year =snakemake.wildcards["year"]
 region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
+nuts = snakemake.wildcards["nuts"]
 
 
 ############################## Operations
@@ -42,8 +44,9 @@ resource = snakemake.wildcards["resource"]
 ##### Load CF
 CF = load_CF(file_nc_CF)
 
-##### Load gdf_NUTS
-gdf_NUTS, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
+##### Load local geometry (black outline) and context boundaries (grey)
+_, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
+gdf_context = load_context_boundaries(file_gdf_NUTS_ref, nuts)
 
 
 ############################## Create outputs
@@ -102,7 +105,7 @@ _log_and_print(
 ##### Make plot
 plot_dataarray_on_map(
     data=CF,
-    gdf_NUTS=gdf_NUTS,
+    gdf_context=gdf_context,
     gdf_NUTS_local=gdf_NUTS_local,
     region=region,
     file_output=file_map_CF,

@@ -3,7 +3,7 @@ import xarray as xr
 from shapely import contains_xy
 from matplotlib import colormaps
 from matplotlib.colors import LinearSegmentedColormap
-from utils import load_gdf_nuts, plot_dataarray_on_map, load_GEBCO
+from utils import load_gdf_nuts, load_context_boundaries, plot_dataarray_on_map, load_GEBCO
 
 from typing import Any
 snakemake: Any  # This is to avoid my IDE to complain about snakemake variable not being defined, but it is actually defined when running the script with snakemake
@@ -16,18 +16,21 @@ snakemake: Any  # This is to avoid my IDE to complain about snakemake variable n
 fig_params = snakemake.params["fig_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
+file_gdf_NUTS_ref = snakemake.input["gdf_NUTS_ref"]
 file_nc_GEBCO = snakemake.input["nc_GEBCO"]
 ##### output
 file_map_GEBCO = snakemake.output["map_GEBCO"]
 ##### wildcards
 region = snakemake.wildcards["region"]
+nuts = snakemake.wildcards["nuts"]
 
 
 
 ############################## Operations
 
-##### Load gdf_NUTS
-gdf_NUTS, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
+##### Load local geometry (black outline) and context boundaries (grey)
+_, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
+gdf_context = load_context_boundaries(file_gdf_NUTS_ref, nuts)
 
 ##### Load GEBCO
 GEBCO = load_GEBCO(file_nc_GEBCO)
@@ -96,7 +99,7 @@ gebco_cmap = LinearSegmentedColormap.from_list(
 ##### Make plot
 plot_dataarray_on_map(
     data=GEBCO_local,
-    gdf_NUTS=gdf_NUTS,
+    gdf_context=gdf_context,
     gdf_NUTS_local=gdf_NUTS_local,
     region=region,
     file_output=file_map_GEBCO,

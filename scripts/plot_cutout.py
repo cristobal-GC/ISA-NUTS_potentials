@@ -1,5 +1,5 @@
 import cartopy.crs as ccrs
-from utils import load_and_limit_cutout, load_gdf_nuts, plot_dataarray_on_map, resolve_user_home_path
+from utils import load_and_limit_cutout, load_gdf_nuts, load_context_boundaries, plot_dataarray_on_map, resolve_user_home_path
 
 import matplotlib
 matplotlib.use('Agg')  # This enables backend without GUI (there seems to be problems with projection, PlateCarree)
@@ -22,6 +22,7 @@ cutout_params = snakemake.params["cutout_params"]
 fig_params = snakemake.params["fig_params"]
 ##### input
 file_gdf_NUTS = snakemake.input["gdf_NUTS"]
+file_gdf_NUTS_ref = snakemake.input["gdf_NUTS_ref"]
 ##### output
 file_map_cutout = snakemake.output["map_cutout"]
 ##### wildcards
@@ -29,13 +30,15 @@ cutout = snakemake.wildcards["cutout"]
 year =snakemake.wildcards["year"]
 region = snakemake.wildcards["region"]
 resource = snakemake.wildcards["resource"]
+nuts = snakemake.wildcards["nuts"]
 
 
 
 ############################## Operations
 
-##### Load gdf_NUTS and gdf_NUTS_local
-gdf_NUTS, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
+##### Load local geometry (black outline) and context boundaries (grey)
+_, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
+gdf_context = load_context_boundaries(file_gdf_NUTS_ref, nuts)
 
 
 ##### Load and limit cutout
@@ -68,7 +71,7 @@ units = fig_params['cutout'][resource]['units']
 ##### Make plot
 plot_dataarray_on_map(
     data=field,
-    gdf_NUTS=gdf_NUTS,
+    gdf_context=gdf_context,
     gdf_NUTS_local=gdf_NUTS_local,
     region=region,
     file_output=file_map_cutout,

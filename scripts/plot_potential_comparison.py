@@ -5,6 +5,8 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from utils import geographic_aspect
+
 from typing import Any
 snakemake: Any
 
@@ -96,6 +98,8 @@ for ax, (density_col, title) in zip(axes, plots):
 
     if gdf_plot.empty:
         ax.set_extent([level_xmin, level_xmax, level_ymin, level_ymax], crs=crs)
+        # Distance-proportionate aspect (cos(lat)); see utils.geographic_aspect.
+        ax.set_aspect(geographic_aspect((level_ymin + level_ymax) / 2))
         ax.set_title(f"{title}\n(No data)", fontsize=fontsize)
         ax.coastlines(resolution="10m", color="black", linewidth=0.2)
         ax.set_xticks([])
@@ -110,6 +114,8 @@ for ax, (density_col, title) in zip(axes, plots):
     pad_y = max(dy * 0.03, 1e-6)
 
     ax.set_extent([xmin - pad_x, xmax + pad_x, ymin - pad_y, ymax + pad_y], crs=crs)
+    # Distance-proportionate aspect (cos(lat)); see utils.geographic_aspect.
+    ax.set_aspect(geographic_aspect((ymin + ymax) / 2))
     gdf_plot.plot(
         column=density_col,
         cmap="viridis",
