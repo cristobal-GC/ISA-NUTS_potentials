@@ -31,6 +31,23 @@ ISAS = [0, 1, 2, 3, 4]
 
 
 
+# Global wildcard constraints. The region id can contain underscores (e.g. ADM3
+# municipality ids like "El_Toboso", where the underscore stands for a space in
+# the real name). Pinning every other underscore-delimited field below lets
+# Snakemake split paths like CF_{resource}_{region}_{year}.{format} unambiguously
+# even when {region} itself contains underscores. Without this, "..._El_Toboso_2013"
+# could be mis-split as resource="El", region="Toboso".
+wildcard_constraints:
+    resource=r"onwind|solar",
+    cutout=r"era5|newa|werschis",
+    year=r"\d+",
+    format=r"png|pdf",
+    resolution=r"HR|LR",
+    isa=r"\d+",
+    filters=r"CFth|ISA\d+|CFth_ISA\d+",
+
+
+
 # This function infers NUTS level from explicit region patterns:
 # NUTS0: AB   (A,B uppercase letters only, e.g. 'ES')
 # NUTS2: ABxy (A,B uppercase letters; x,y digits)
@@ -54,12 +71,12 @@ if isinstance(REGIONS_CFG, dict):
     # inferred/validated. Custom levels (e.g. CIMAS) use arbitrary domain ids
     # defined explicitly in the config, so they are not subject to inference.
     STANDARD_NUTS_KEYS = {"NUTS0", "NUTS2", "NUTS3"}
-    CUSTOM_NUTS_KEYS = {"CIMAS"}
+    CUSTOM_NUTS_KEYS = {"CIMAS", "ADM3"}
     VALID_NUTS_KEYS = STANDARD_NUTS_KEYS | CUSTOM_NUTS_KEYS
     invalid_keys = [key for key in REGIONS_CFG if key not in VALID_NUTS_KEYS]
     if invalid_keys:
         raise ValueError(
-            f"Invalid regions keys {invalid_keys}. Expected only 'NUTS0', 'NUTS2', 'NUTS3' and/or 'CIMAS'."
+            f"Invalid regions keys {invalid_keys}. Expected only 'NUTS0', 'NUTS2', 'NUTS3', 'CIMAS' and/or 'ADM3'."
         )
 
     REGION_NUTS_PAIRS = [
@@ -283,7 +300,45 @@ rule all:
             for resource in RESOURCES
             for fmt in FORMATS
         ],
-       
+
+        # Per-region maps that the summary sheet embeds. Listed explicitly so
+        # they are first-class targets and produced in every configured format
+        # (not only the single format the sheet happens to use).
+        [
+            f"results/maps/ISA/{nuts}/{resolution}/ISA_{resource}_{region}_{resolution}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for resource in RESOURCES
+            for resolution in RESOLUTIONS
+            for fmt in FORMATS
+        ],
+
+        [
+            f"results/maps/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ],
+
+        [
+            f"results/maps/CAPACITY/{cutout}/{nuts}/CAPACITY_CFth_ISA4_{resource}_{region}_{year}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ],
+
+        [
+            f"results/figs/CF_CAPACITY/{cutout}/{nuts}/CF_CAPACITY_{resource}_{region}_{year}.{fmt}"
+            for nuts, region in REGION_NUTS_PAIRS
+            for cutout in CUTOUTS
+            for year in YEARS
+            for resource in RESOURCES
+            for fmt in FORMATS
+        ],
+
         [
             f"results/figs/venn/{cutout}/{nuts}/venn_{resource}_{region}_{year}.{fmt}"
             for nuts, region in REGION_NUTS_PAIRS
@@ -361,13 +416,13 @@ rule all:
             for resource in RESOURCES
         ],
 
-        [
-            f"results/LaTex/tables/summary/{cutout}/{year}/{resource}/{nuts}/table_summary_{resource}_{nuts}.tex"
-            for cutout in CUTOUTS
-            for year in YEARS
-            for resource in RESOURCES
-            for nuts in AGG_NUTS_LEVELS
-        ],
+        #[
+        #    f"results/LaTex/tables/summary/{cutout}/{year}/{resource}/{nuts}/table_summary_{resource}_{nuts}.tex"
+        #    for cutout in CUTOUTS
+        #    for year in YEARS
+        #    for resource in RESOURCES
+        #    for nuts in AGG_NUTS_LEVELS
+        #],
 
         [
             f"results/LaTex/{cutout}/{year}/{resource}/{nuts}/summary_{region}_{resolution}.pdf"

@@ -46,7 +46,7 @@ CF = load_CF(file_nc_CF)
 
 ##### Load local geometry (black outline) and context boundaries (grey)
 _, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
-gdf_context = load_context_boundaries(file_gdf_NUTS_ref, nuts)
+gdf_context = load_context_boundaries(file_gdf_NUTS_ref, nuts, clip_to=gdf_NUTS_local)
 
 
 ############################## Create outputs

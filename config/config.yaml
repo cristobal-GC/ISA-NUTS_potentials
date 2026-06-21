@@ -24,11 +24,6 @@ regions:
   # ##########- ES64 # Ciudad Autónoma de Melilla
   # ##########- ES70 # Canarias
   NUTS3:
-  # NUTS3 regions contained within the CIMAS DOM2 domain (~100% inside)
-  - ES300 # Madrid
-  - ES411 # Ávila
-  - ES416 # Segovia
-  - ES425 # Toledo
   # - ES111 # A Coruña
   # - ES112 # Lugo
   # - ES113 # Ourense
@@ -43,13 +38,13 @@ regions:
   # - ES241 # Huesca
   # - ES242 # Teruel
   # - ES243 # Zaragoza
-  # - ES300 # Madrid
-  # - ES411 # Ávila
+  - ES300 # Madrid
+  - ES411 # Ávila
   # - ES412 # Burgos
   # - ES413 # León
   # - ES414 # Palencia
-  # - ES415 # Salamanca
-  # - ES416 # Segovia
+  - ES415 # Salamanca
+  - ES416 # Segovia
   # - ES417 # Soria
   # - ES418 # Valladolid
   # - ES419 # Zamora
@@ -57,7 +52,7 @@ regions:
   # - ES422 # Ciudad Real
   # - ES423 # Cuenca
   # - ES424 # Guadalajara
-  # - ES425 # Toledo
+  - ES425 # Toledo
   # - ES431 # Badajoz
   # - ES432 # Cáceres
   # - ES511 # Barcelona
@@ -91,6 +86,11 @@ regions:
   CIMAS:
   - DOM1
   - DOM2
+  ADM3:
+  #- "Santiz" # Salamanca
+  - "Riaza" # Segovia
+  - "Villatoro" # Ávila
+  - "El_Toboso" # Toledo (underscore = space in the real name "El Toboso")
 
 resources:
 - onwind
@@ -105,7 +105,7 @@ resolutions:
 - LR
 
 cutouts:
-#- era5
+- era5
 #- newa
 - werschis
 
@@ -125,7 +125,7 @@ gebco:
 
 cutout_params:
   era5_2013:
-    path: # ADD PATH TO CUTOUT
+    path: /home/balinux6/DOCK_01/SANDBOXES/sandbox_Ryzen3975/cutouts/europe-2013-sarah3-era5.nc
   newa_2013:
     path: # ADD PATH TO CUTOUT
   werschis_2013:
@@ -136,7 +136,7 @@ CF_params:
     turbine: Vestas_V112_3MW_h100
     correction_factor: 0.93
     cap_per_sqkm: 10
-    CF_threshold: 0.285
+    CF_threshold: 0.2283 # 0.285
   solar:
     panel: CSi
     orientation:

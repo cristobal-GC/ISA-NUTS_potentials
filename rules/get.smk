@@ -24,16 +24,32 @@ def get_regions_for_nuts(wc):
 
 # Geometry source for a given level. Standard NUTS levels share the official
 # NUTS GeoJSON; the custom CIMAS level uses a GeoJSON built from the rectangular
-# domains declared in config['CIMAS_domains'] (rule get_geojson_CIMAS).
-# This function is defined in the first included rules file so it is available
-# to all rules (get/plot/latex).
+# domains declared in config['CIMAS_domains'] (rule get_geojson_CIMAS); the
+# custom ADM3 level uses the geoBoundaries municipalities GeoJSON (identified by
+# 'shapeName', without the NUTS columns).
+# These are defined in the first included rules file so they are available to all
+# rules (get/plot/latex).
 NUTS_GEOJSON = "data/NUTS/NUTS_RG_01M_2021_4326_ES.geojson"
 CIMAS_GEOJSON = "data/NUTS/CIMAS.geojson"
+ADM3_GEOJSON = "data/NUTS/geoBoundaries-ESP-ADM3_simplified.geojson"
 
 
 def gdf_nuts_input(wc):
     if wc.nuts == "CIMAS":
         return CIMAS_GEOJSON
+    if wc.nuts == "ADM3":
+        return ADM3_GEOJSON
+    return NUTS_GEOJSON
+
+
+# Source for the thin grey context boundaries drawn behind a region:
+#   - NUTS0/2/3 and CIMAS: the official NUTS GeoJSON (same-level regions, or
+#     NUTS3 provinces for CIMAS).
+#   - ADM3: the municipalities GeoJSON itself (neighbouring municipalities).
+# The level filtering happens in utils.load_context_boundaries.
+def gdf_context_input(wc):
+    if wc.nuts == "ADM3":
+        return ADM3_GEOJSON
     return NUTS_GEOJSON
 
 
@@ -71,7 +87,7 @@ rule get_geojson_CIMAS:
 
 rule get_raster_ISA:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "get_raster_ISA",
@@ -107,7 +123,7 @@ rule get_raster_ISA:
 
 rule get_df_ISA:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "get_df_ISA",
@@ -146,7 +162,7 @@ rule get_df_ISA:
 
 rule get_nc_CF:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "get_nc_CF",
@@ -190,7 +206,7 @@ rule get_nc_CF:
 
 rule get_nc_CAPACITY:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
         resource="onwind|solar",
         filters=r"CFth|ISA\d+|CFth_ISA\d+",
     threads:
@@ -252,7 +268,7 @@ rule get_nc_CAPACITY:
 
 rule get_df_CF_CAPACITY:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "get_df_CF_CAPACITY",
@@ -289,7 +305,7 @@ rule get_df_CF_CAPACITY:
 
 rule get_df_CAPACITY:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "get_df_CAPACITY",
@@ -334,7 +350,7 @@ rule get_df_CAPACITY:
 
 rule get_df_summary:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "get_df_summary",

@@ -367,26 +367,50 @@ def resolve_user_home_path(path_value):
 
 
 def load_gdf_nuts(file_gdf_NUTS, region):
-    
-    ##### Load full gdf_NUTS and select local region
-    gdf_NUTS = (
-        gpd.read_file(file_gdf_NUTS)
-        .set_index("NUTS_ID")
-    )
+
+    ##### Load full gdf and pick the identifier column.
+    # The official NUTS GeoJSON and the CIMAS GeoJSON identify regions by
+    # 'NUTS_ID'; the geoBoundaries ADM3 (municipalities) file uses 'shapeName'
+    # and lacks the NUTS columns (NUTS_ID, LEVL_CODE, NUTS_NAME, ...). Detect
+    # whichever identifier column is present so the rest of the workflow is
+    # agnostic to the geometry source.
+    gdf = gpd.read_file(file_gdf_NUTS)
+    if "NUTS_ID" in gdf.columns:
+        id_col = "NUTS_ID"
+    elif "shapeName" in gdf.columns:
+        id_col = "shapeName"
+    else:
+        raise ValueError(
+            f"[load_gdf_nuts] No known identifier column in {file_gdf_NUTS}. "
+            "Expected 'NUTS_ID' or 'shapeName'."
+        )
+
+    gdf_NUTS = gdf.set_index(id_col)
 
     _log_and_print(
-        f"[load_gdf_nuts] gdf_NUTS loaded gdf_NUTS. CRS: {gdf_NUTS.crs}"
+        f"[load_gdf_nuts] gdf loaded from {file_gdf_NUTS}. id_col: {id_col}. CRS: {gdf_NUTS.crs}"
     )
 
-    ##### Filter local region. 
-    gdf_NUTS_local = gdf_NUTS.loc[[region]]
-    
+    ##### Filter local region.
+    # Output filenames use the region id verbatim, so it must not contain spaces;
+    # for municipalities (shapeName) the id uses underscores in place of spaces
+    # (e.g. "El_Toboso"). Convert back to the real name to match the geometry.
+    lookup = region.replace("_", " ") if id_col == "shapeName" else region
+    gdf_NUTS_local = gdf_NUTS.loc[[lookup]]
+
+    if len(gdf_NUTS_local) > 1:
+        raise ValueError(
+            f"[load_gdf_nuts] Region '{region}' matches {len(gdf_NUTS_local)} "
+            f"geometries in {file_gdf_NUTS} (ambiguous identifier '{id_col}'). "
+            "Use a unique identifier."
+        )
+
     _log_and_print(
         f"[load_gdf_nuts] Filtered local region: {region}"
     )
 
-    # For ES, also apply the geometry subtraction to remove Canarias, Ceuta and Melilla 
-    if region == 'ES':
+    # For ES, also apply the geometry subtraction to remove Canarias, Ceuta and Melilla
+    if id_col == "NUTS_ID" and region == 'ES':
         gdf_NUTS_local = _subtract_excluded_geometries(gdf_NUTS_local, gdf_NUTS)
         # Log
         _log_and_print(
@@ -397,28 +421,55 @@ def load_gdf_nuts(file_gdf_NUTS, region):
 
 
 
-def load_context_boundaries(file_nuts, nuts):
+def load_context_boundaries(file_nuts, nuts, clip_to=None):
     """Reference administrative boundaries drawn as thin grey context on a map.
 
     The region/domain being analysed is always drawn with a thick black outline;
     this returns the lighter background layer drawn behind it:
-      - NUTS0 / NUTS2 / NUTS3: the other regions of the SAME NUTS level.
+      - NUTS0 / NUTS2 / NUTS3: the other regions of the SAME NUTS level
+        (from the official NUTS GeoJSON).
       - CIMAS: the NUTS3 regions (provinces). A CIMAS domain is a custom
-        rectangle with no sibling regions of its own, so NUTS3 boundaries are
-        used to give geographic context within the domain.
+        rectangle with no sibling regions of its own, so NUTS3 boundaries give
+        geographic context within the domain.
+      - ADM3: the neighbouring municipalities (the whole municipalities GeoJSON;
+        that file has no LEVL_CODE, every feature is a municipality).
 
-    The boundaries always come from the official NUTS GeoJSON (returned in its
-    CRS, EPSG:4326), regardless of where the analysed geometry comes from.
+    Parameters
+    ----------
+    file_nuts : str
+        GeoJSON providing the context geometries (the official NUTS file for
+        NUTS/CIMAS, the municipalities file for ADM3). Returned in its CRS
+        (EPSG:4326).
+    nuts : str
+        Level wildcard.
+    clip_to : geopandas.GeoDataFrame, optional
+        If given, only context geometries intersecting this geometry's bounding
+        box (expanded by its own size on each side) are returned. Mainly an
+        optimisation for ADM3, where the file holds thousands of municipalities
+        but only the local neighbourhood is ever in view.
     """
     levl_by_nuts = {"NUTS0": 0, "NUTS2": 2, "NUTS3": 3, "CIMAS": 3}
-    if nuts not in levl_by_nuts:
-        raise ValueError(
-            f"[load_context_boundaries] Unknown nuts level '{nuts}'. "
-            f"Expected one of {sorted(levl_by_nuts)}."
-        )
 
     gdf = gpd.read_file(file_nuts)
-    return gdf[gdf["LEVL_CODE"] == levl_by_nuts[nuts]]
+
+    if nuts == "ADM3":
+        # Municipalities file: no LEVL_CODE; every feature is itself the level.
+        context = gdf
+    elif nuts in levl_by_nuts:
+        context = gdf[gdf["LEVL_CODE"] == levl_by_nuts[nuts]]
+    else:
+        raise ValueError(
+            f"[load_context_boundaries] Unknown nuts level '{nuts}'. "
+            f"Expected one of {sorted(levl_by_nuts) + ['ADM3']}."
+        )
+
+    if clip_to is not None and len(context):
+        xmin, ymin, xmax, ymax = clip_to.to_crs(context.crs).total_bounds
+        dx = xmax - xmin
+        dy = ymax - ymin
+        context = context.cx[xmin - dx:xmax + dx, ymin - dy:ymax + dy]
+
+    return context
 
 
 
@@ -706,12 +757,28 @@ def plot_dataarray_on_map(
     cbar.set_label(cbar_label, fontsize=fontsize*1.5)
     cbar.ax.tick_params(labelsize=fontsize*1.5)
 
-    ##### Mark the threshold on the colorbar (where the color changes)
+    ##### Distribute colorbar ticks evenly around the threshold and mark it
     if use_twoslope:
+        # By default matplotlib's tick locator picks "nice" round values across
+        # [vmin, vmax] with no knowledge of the threshold (vcenter), and the
+        # TwoSlopeNorm stretches the two sides of the threshold by different
+        # amounts. The result is ticks that look unevenly distributed above vs
+        # below the colour change. Place an equal number of evenly spaced ticks
+        # on each side of the threshold (each side maps linearly to half the
+        # bar, so the ticks come out evenly spaced on the colorbar) plus the
+        # threshold itself, so the labels are symmetric about the colour change.
+        n_side = 3
+        ticks_below = np.linspace(vmin, vcenter, n_side + 1)[:-1]
+        ticks_above = np.linspace(vcenter, vmax, n_side + 1)[1:]
+        ticks = np.concatenate([ticks_below, [vcenter], ticks_above])
+        cbar.set_ticks(ticks)
+        cbar.ax.set_yticklabels([f"{t:.2f}" for t in ticks])
+
+        # Threshold line (where the colour changes).
         cbar.ax.axhline(y=vcenter, color="black", linewidth=linewidth, linestyle="--")
 
     ##### Add boundaries
-    # Context regions (thin grey): same-level NUTS, or NUTS3 for a CIMAS domain.
+    # Context regions (thin grey); see load_context_boundaries.
     gdf_context.plot(
         ax=ax, color="none", edgecolor='grey', linewidth=linewidth
     )

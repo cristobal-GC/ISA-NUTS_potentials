@@ -17,7 +17,7 @@ def get_tex_fig_ext(wc):
 
 rule get_tex_summary:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
         resolution="HR|LR",
         resource="onwind|solar",
     threads:
@@ -53,7 +53,7 @@ rule get_tex_summary:
     shell:
         (
             "python scripts/get_tex_summary.py "
-            "--region {wildcards.region} "
+            "--region \"{wildcards.region}\" "
             "--cutout {wildcards.cutout} "
             "--year {wildcards.year} "
             "--resource {wildcards.resource} "
@@ -89,7 +89,7 @@ rule get_tex_summary:
 
 rule compile_tex_summary:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
         resolution="HR|LR",
         resource="onwind|solar",
     threads:
@@ -113,13 +113,13 @@ rule compile_tex_summary:
     shell:
         (
             "set -euo pipefail; "
-            "TEX_DIR=$(dirname {input.tex_summary}); "
-            "TEX_BASE=summary_{wildcards.region}_{wildcards.resolution}; "
+            "TEX_DIR=$(dirname \"{input.tex_summary}\"); "
+            "TEX_BASE=\"summary_{wildcards.region}_{wildcards.resolution}\"; "
             "PDFLATEX_BIN=/usr/bin/pdflatex; "
             "if [ ! -x \"$PDFLATEX_BIN\" ]; then PDFLATEX_BIN=$(command -v pdflatex); fi; "
-            "\"$PDFLATEX_BIN\" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory \"$TEX_DIR\" {input.tex_summary} >/dev/null || "
+            "\"$PDFLATEX_BIN\" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory \"$TEX_DIR\" \"{input.tex_summary}\" >/dev/null || "
             "(echo '[compile_tex_summary] First pdflatex pass failed. Showing log tail:'; tail -n 120 \"$TEX_DIR/$TEX_BASE.log\"; exit 1); "
-            "\"$PDFLATEX_BIN\" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory \"$TEX_DIR\" {input.tex_summary} >/dev/null || "
+            "\"$PDFLATEX_BIN\" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory \"$TEX_DIR\" \"{input.tex_summary}\" >/dev/null || "
             "(echo '[compile_tex_summary] Second pdflatex pass failed. Showing log tail:'; tail -n 120 \"$TEX_DIR/$TEX_BASE.log\"; exit 1); "
             "rm -f \"$TEX_DIR/$TEX_BASE.aux\" \"$TEX_DIR/$TEX_BASE.log\" \"$TEX_DIR/$TEX_BASE.out\""
         )

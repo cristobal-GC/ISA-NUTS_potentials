@@ -25,13 +25,15 @@ file_df_summary = snakemake.output["df_summary"]
 
 ############################## Operations
 
-# Region codes are NUTS ids (ES, ES11, ES111) or custom domain ids (e.g. DOM1):
-# uppercase letters/digits with no underscore.
+# Region ids: NUTS codes (ES, ES11, ES111), CIMAS domains (DOM1) or ADM3
+# municipality ids (e.g. El_Toboso, which may contain underscores). The resource
+# (onwind/solar, no underscore) and the trailing numeric year anchor the region
+# field, so region is matched greedily.
 pattern = re.compile(
-    r"df_CF_CAPACITY_ISA(?P<isa>\d+)_[^_]+_(?P<region>[A-Z0-9]+)_\d+\.csv$"
+    r"df_CF_CAPACITY_ISA(?P<isa>\d+)_[^_]+_(?P<region>.+)_\d+\.csv$"
 )
 pattern_capacity = re.compile(
-    r"df_CAPACITY_[^_]+_(?P<region>[A-Z0-9]+)_\d+\.csv$"
+    r"df_CAPACITY_[^_]+_(?P<region>.+)_\d+\.csv$"
 )
 
 summary = {

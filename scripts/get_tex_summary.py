@@ -55,12 +55,22 @@ def read_region_name(nuts_geojson: Path, region: str) -> str:
     with nuts_geojson.open("r", encoding="utf-8") as handle:
         data = json.load(handle)
 
+    # Region ids use underscores in place of spaces for filename safety
+    # (e.g. "El_Toboso"); the real shapeName has spaces.
+    region_name = region.replace("_", " ")
     for feature in data.get("features", []):
         props = feature.get("properties", {})
-        if props.get("NUTS_ID") == region:
-            return props.get("NUTS_NAME") or props.get("NAME_LATN") or region
+        # NUTS / CIMAS files use 'NUTS_ID'; the ADM3 municipalities file uses
+        # 'shapeName' and lacks the NUTS name columns.
+        if props.get("NUTS_ID") == region or props.get("shapeName") == region_name:
+            return (
+                props.get("NUTS_NAME")
+                or props.get("NAME_LATN")
+                or props.get("shapeName")
+                or region_name
+            )
 
-    return region
+    return region_name
 
 
 def read_threshold(config_file: Path, resource: str, cli_threshold: float | None) -> float:
@@ -177,11 +187,23 @@ def main() -> None:
 
     region_name = read_region_name(nuts_geojson, args.region)
 
+    # Title shown on the sheet. The region id in readable form (underscores ->
+    # spaces, e.g. "El_Toboso" -> "El Toboso"; also LaTeX-safe, no subscript
+    # underscores). For NUTS the id is a code distinct from the name, so show
+    # "Name (CODE)"; for custom levels (ADM3 municipalities, CIMAS domains) the
+    # id equals the name, so show it just once instead of "El Toboso (El Toboso)".
+    display_id = args.region.replace("_", " ")
+    title = region_name if display_id == region_name else f"{region_name} ({display_id})"
+
     template = template_file.read_text(encoding="utf-8")
     tex_content = template
 
     replacements = {
+        # NUTSCODE is used inside figure file paths, so it must keep the raw,
+        # filename-safe region id (underscores included, e.g. "El_Toboso").
         "NUTSCODE": args.region,
+        # Full title string, already LaTeX-safe and de-duplicated.
+        "TITLE": title,
         "RESOLUTION": resolution,
         "FIGEXT": fig_ext,
         "THRESHOLD": format_number(threshold, decimals=3),

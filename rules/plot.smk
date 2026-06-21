@@ -12,7 +12,7 @@ GEBCO_CFG = config.get("gebco", {})
 
 rule plot_GEBCO:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "plot_GEBCO",
@@ -31,7 +31,7 @@ rule plot_GEBCO:
         fig_params=config["fig_params"]
     input:
         gdf_NUTS=gdf_nuts_input,
-        gdf_NUTS_ref=NUTS_GEOJSON,
+        gdf_NUTS_ref=gdf_context_input,
         nc_GEBCO=f"{GEBCO_CFG['folder']}/{GEBCO_CFG['file_name']}"
     output:
         map_GEBCO="results/maps/GEBCO/{nuts}/GEBCO_{region}.{format}"
@@ -51,7 +51,7 @@ rule plot_GEBCO:
 
 rule plot_ISA:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "plot_ISA",
@@ -70,7 +70,7 @@ rule plot_ISA:
         fig_params=config["fig_params"]
     input:
         gdf_NUTS=gdf_nuts_input,
-        gdf_NUTS_ref=NUTS_GEOJSON,
+        gdf_NUTS_ref=gdf_context_input,
         raster_ISA="results/rasters/ISA/{nuts}/raster_ISA_{resource}_{region}.tiff",
         df_ISA="results/dfs/ISA/{nuts}/df_ISA_{resource}_{region}.csv"
     output:
@@ -92,7 +92,7 @@ rule plot_ISA:
 
 rule plot_cutout:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "plot_cutout",
@@ -112,7 +112,7 @@ rule plot_cutout:
         fig_params=config["fig_params"]
     input:
         gdf_NUTS=gdf_nuts_input,
-        gdf_NUTS_ref=NUTS_GEOJSON,
+        gdf_NUTS_ref=gdf_context_input,
     output:
         map_cutout="results/maps/cutout/{cutout}/{nuts}/cutout_{resource}_{region}_{year}.{format}"
     script:
@@ -138,7 +138,7 @@ rule plot_cutout:
 
 rule plot_CF:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "plot_CF",
@@ -158,7 +158,7 @@ rule plot_CF:
         CF_threshold=lambda w: config["CF_params"][w.resource]["CF_threshold"]
     input:
         gdf_NUTS=gdf_nuts_input,
-        gdf_NUTS_ref=NUTS_GEOJSON,
+        gdf_NUTS_ref=gdf_context_input,
         nc_CF="results/ncs/CF/{cutout}/{nuts}/CF_{resource}_{region}_{year}.nc",
         dfs_CF_CAPACITY=lambda w: expand(
             "results/dfs/CF_CAPACITY/{cutout}/{nuts}/df_CF_CAPACITY_ISA{isa}_{resource}_{region}_{year}.csv",
@@ -189,7 +189,7 @@ rule plot_CF:
 
 rule plot_CAPACITY:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
         resource="onwind|solar",
         filters=r"CFth|ISA\d+|CFth_ISA\d+",
     threads:
@@ -210,7 +210,7 @@ rule plot_CAPACITY:
         fig_params=config["fig_params"]
     input:
         gdf_NUTS=gdf_nuts_input,
-        gdf_NUTS_ref=NUTS_GEOJSON,
+        gdf_NUTS_ref=gdf_context_input,
         nc_CAPACITY="results/ncs/CAPACITY/{cutout}/{nuts}/CAPACITY_{filters}_{resource}_{region}_{year}.nc"
     output:
         map_CAPACITY="results/maps/CAPACITY/{cutout}/{nuts}/CAPACITY_{filters}_{resource}_{region}_{year}.{format}"
@@ -231,7 +231,7 @@ rule plot_CAPACITY:
 
 rule plot_df_CF_CAPACITY:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "plot_df_CF_CAPACITY",
@@ -272,7 +272,7 @@ rule plot_df_CF_CAPACITY:
 
 rule plot_venn_single:
     wildcard_constraints:
-        nuts="NUTS0|NUTS2|NUTS3|CIMAS",
+        nuts="NUTS0|NUTS2|NUTS3|CIMAS|ADM3",
     threads:
         lambda w: get_rule_threads(
             "plot_venn_single",

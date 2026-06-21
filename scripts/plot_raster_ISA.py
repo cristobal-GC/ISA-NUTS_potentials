@@ -91,7 +91,7 @@ df = pd.read_csv(file_df_ISA, index_col="value")
 ##### both in the same (geographic) CRS used for plotting.
 _, gdf_NUTS_local = load_gdf_nuts(file_gdf_NUTS, region)
 gdf_NUTS_local = gdf_NUTS_local.to_crs(raster_crs)
-gdf_context = load_context_boundaries(file_gdf_NUTS_ref, nuts).to_crs(raster_crs)
+gdf_context = load_context_boundaries(file_gdf_NUTS_ref, nuts, clip_to=gdf_NUTS_local).to_crs(raster_crs)
 
 
 
@@ -133,7 +133,7 @@ show(band_masked,
     ax=ax
 )
 
-# Context regions (thin grey): same-level NUTS, or NUTS3 for a CIMAS domain.
+# Context regions (thin grey); see utils.load_context_boundaries.
 gdf_context.plot(ax=ax, color="none", edgecolor='grey', linewidth=linewidth)
 
 # Region/domain being plotted (thick black).
